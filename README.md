@@ -23,32 +23,33 @@ Mais do que um editor de texto, o Pluma Scriptum é um **companheiro de escrita*
 
 ## Funcionalidades Planejadas
 
-### Diários de Personagem
-- Criação de perfis de personagens com campos personalizáveis.  
-- Gerador de perguntas reflexivas para aprofundar personalidade e voz narrativa.  
+- **Diários de Personagem**
+  - Criação de perfis de personagens com campos personalizáveis  
+  - Gerador de perguntas reflexivas para aprofundar personalidade e voz narrativa  
 
-### Construção de Mundo Profunda
-- Organização por temas: sociedade, religião, geografia, cultura, política, etc.  
-- Gerador de perguntas temáticas para estimular a criação de universos originais.
-  
-### Gerador de Inspiração
-- Prompts e desafios criativos divididos por emoção, conflito ou tema.  
-- Possibilidade de salvar e compartilhar prompts próprios.  
+- **Construção de Mundo Profunda**
+  - Organização por temas: sociedade, religião, geografia, cultura, política, etc.  
+  - Gerador de perguntas temáticas para estimular a criação de universos originais  
 
-### Modo Reflexão
-- Espaço pessoal para registrar emoções e bloqueios criativos.  
-- Diário do autor, com registro de humor e progresso.  
+- **Gerador de Inspiração**
+  - Prompts e desafios criativos divididos por emoção, conflito ou tema  
+  - Possibilidade de salvar e compartilhar prompts próprios  
 
-### Painel do Projeto
-- Visualização geral do livro: capítulos, cenas e linhas do tempo.  
-- Tags para temas, símbolos e objetos relevantes.  
+- **Modo Reflexão**
+  - Espaço pessoal para registrar emoções e bloqueios criativos  
+  - Diário do autor, com registro de humor e progresso  
 
-### Modo de Fluxo de Escrita
-- Tela minimalista e sem distrações.  
+- **Painel do Projeto**
+  - Visualização geral do livro: capítulos, cenas e linhas do tempo  
+  - Tags para temas, símbolos e objetos relevantes  
 
-### Gamificação leve
-- Sistema de streaks (dias consecutivos de escrita).  
-- Desafios semanais e metas personalizáveis.  
+- **Modo de Fluxo de Escrita**
+  - Tela minimalista e sem distrações  
+
+- **Gamificação leve**
+  - Sistema de streaks (dias consecutivos de escrita)  
+  - Desafios semanais e metas personalizáveis  
+
 
 ---
 
@@ -62,8 +63,8 @@ Mais do que um editor de texto, o Pluma Scriptum é um **companheiro de escrita*
 
 ## Status do Projeto
 🚧 Em fase inicial de concepção.  
-Primeiros passos: Estruturação da ideia e planejamento de funcionalidades.
-Próximos passos: Mapeamento de telas e início da implementação.
+- Primeiros passos: Estruturação da ideia e planejamento de funcionalidades.
+- Próximos passos: Mapeamento de telas e início da implementação.
 
 ---
 
