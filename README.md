@@ -1,10 +1,10 @@
 # 🪶 Pluma Scriptum
 
-> Um aplicativo móvel de suporte criativo para escritores — um espaço onde a imaginação ganha estrutura, e a escrita se torna uma jornada.
+Um aplicativo móvel de suporte criativo para escritores — um espaço onde a imaginação ganha estrutura, e a escrita se torna uma jornada.
 
 ---
 
-## 🌟 Visão Geral
+## Visão Geral
 
 **Pluma Scriptum** é um aplicativo voltado à **criação literária e narrativa**, desenvolvido para oferecer suporte ao escritor em todas as fases do processo criativo.
 
@@ -12,7 +12,7 @@ Mais do que um editor de texto, o Pluma Scriptum é um **companheiro de escrita*
 
 ---
 
-## ✍️ Objetivos
+## Objetivos
 
 - Auxiliar escritores na **construção de personagens e mundos** de forma envolvente e emocional.  
 - Estimular a **criatividade** com perguntas e prompts reflexivos.  
@@ -21,38 +21,38 @@ Mais do que um editor de texto, o Pluma Scriptum é um **companheiro de escrita*
 
 ---
 
-## 💡 Funcionalidades Planejadas
+## Funcionalidades Planejadas
 
-### 🧍‍♀️ Diários de Personagem
+### Diários de Personagem
 - Criação de perfis de personagens com campos personalizáveis.  
 - Gerador de perguntas reflexivas para aprofundar personalidade e voz narrativa.  
 
-### 🌍 Construção de Mundo Profunda
+### Construção de Mundo Profunda
 - Organização por temas: sociedade, religião, geografia, cultura, política, etc.  
 - Gerador de perguntas temáticas para estimular a criação de universos originais.
   
-### 🔀 Gerador de Inspiração
+### Gerador de Inspiração
 - Prompts e desafios criativos divididos por emoção, conflito ou tema.  
 - Possibilidade de salvar e compartilhar prompts próprios.  
 
-### 🪞 Modo Reflexão
+### Modo Reflexão
 - Espaço pessoal para registrar emoções e bloqueios criativos.  
 - Diário do autor, com registro de humor e progresso.  
 
-### 📚 Painel do Projeto
+### Painel do Projeto
 - Visualização geral do livro: capítulos, cenas e linhas do tempo.  
 - Tags para temas, símbolos e objetos relevantes.  
 
-### 🧠 Modo de Fluxo de Escrita
+### Modo de Fluxo de Escrita
 - Tela minimalista e sem distrações.  
 
-### 🪶 Gamificação leve
+### Gamificação leve
 - Sistema de streaks (dias consecutivos de escrita).  
 - Desafios semanais e metas personalizáveis.  
 
 ---
 
-## 🛠️ Tecnologias (planejadas)
+## Tecnologias (planejadas)
 - **Framework:** React Native com Expo Go
 - **Banco de dados local:** AsyncStorage 
 - **Design:** Minimalista, com foco em imersão e conforto visual.
@@ -60,20 +60,20 @@ Mais do que um editor de texto, o Pluma Scriptum é um **companheiro de escrita*
 
 ---
 
-## 🚀 Status do Projeto
-> 🚧 Em fase inicial de concepção.  
-> Primeiros passos: Estruturação da ideia e planejamento de funcionalidades.
-> Próximos passos: Mapeamento de telas e início da implementação.
+## Status do Projeto
+🚧 Em fase inicial de concepção.  
+Primeiros passos: Estruturação da ideia e planejamento de funcionalidades.
+Próximos passos: Mapeamento de telas e início da implementação.
 
 ---
 
-## 🤝 Contribuições
+## Contribuições
 Futuramente, o projeto poderá receber contribuições da comunidade de escritores e desenvolvedores.  
 Por enquanto, feedbacks e ideias são bem-vindos! 💬
 
 ---
 
-## 💬 Autoria
+## Autoria
 Desenvolvido com 💛 por **Ana Lima** (R.A: 22.124.085-6)
 
 ## Professor Responsável: Isaac Jesus Silva
