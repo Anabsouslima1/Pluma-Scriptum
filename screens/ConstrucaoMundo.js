@@ -1,0 +1,298 @@
+// screens/ConstrucaoMundo.js
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, ScrollView, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import BotaoCustomizado from '../components/BotaoCustomizado';
+
+const STORAGE_KEY = '@mundos';
+
+export default function ConstrucaoMundo() {
+  const [mundos, setMundos] = useState([]);
+  const [mundoSelecionado, setMundoSelecionado] = useState(null);
+  const [nomeMundo, setNomeMundo] = useState('');
+  const [novoTopico, setNovoTopico] = useState('');
+  const [temas, setTemas] = useState([
+    'Sociedade',
+    'Religião',
+    'Geografia',
+    'Cultura',
+    'Política',
+  ]);
+
+  const normalize = (s = '') => s.trim().toLowerCase();
+
+  // Carregar mundos
+  useEffect(() => {
+    (async () => {
+      try {
+        const dados = await AsyncStorage.getItem(STORAGE_KEY);
+        if (dados) setMundos(JSON.parse(dados));
+      } catch (e) {
+        console.log('Erro ao carregar mundos:', e);
+      }
+    })();
+  }, []);
+
+  // Salvar mundos automaticamente
+  useEffect(() => {
+    if (!mundos) return;
+    (async () => {
+      try {
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mundos));
+      } catch (e) {
+        console.log('Erro ao salvar mundos:', e);
+      }
+    })();
+  }, [mundos]);
+
+  const criarNovoMundo = () => {
+    const nome = nomeMundo.trim();
+    if (!nome) return;
+
+    const jaExiste = mundos.some((m) => normalize(m.nome) === normalize(nome));
+    if (jaExiste) {
+      alert('Já existe um mundo com esse nome!');
+      return;
+    }
+
+    const novo = { nome, topicos: [] };
+    const atualizados = [...mundos, novo];
+    setMundos(atualizados);
+    setMundoSelecionado(novo);
+    setNomeMundo('');
+  };
+
+ const selecionarMundo = (nome) => {
+  const encontrado = mundos.find((m) => normalize(m.nome) === normalize(nome));
+  if (encontrado) {
+    setMundoSelecionado(encontrado);
+
+    // Atualiza a lista de temas com os temas salvos no mundo
+    const temasDoMundo = encontrado.topicos?.map((t) => t.tema) || [];
+    const temasPadrao = ['Sociedade', 'Religião', 'Geografia', 'Cultura', 'Política'];
+
+    // Junta os temas padrão com os do mundo, evitando duplicatas
+    const todosTemas = Array.from(new Set([...temasPadrao, ...temasDoMundo]));
+    setTemas(todosTemas);
+  }
+};
+
+
+  const adicionarTopico = () => {
+    if (!novoTopico.trim() || !mundoSelecionado) return;
+    const temaNovo = novoTopico.trim();
+
+    // se for novo tema, adiciona também na lista visual
+    if (!temas.some((t) => normalize(t) === normalize(temaNovo))) {
+      setTemas((prev) => [...prev, temaNovo]);
+    }
+
+    const already = (mundoSelecionado.topicos || []).some(
+      (t) => normalize(t.tema) === normalize(temaNovo)
+    );
+    if (already) {
+      alert('Tema já existe neste mundo.');
+      setNovoTopico('');
+      return;
+    }
+
+    const novo = { tema: temaNovo, conteudo: '' };
+
+    // atualização atômica (garante sincronização imediata)
+    setMundos((prev) => {
+      const atualizados = prev.map((m) => {
+        if (normalize(m.nome) === normalize(mundoSelecionado.nome)) {
+          const mundoAtualizado = {
+            ...m,
+            topicos: [...(m.topicos || []), novo],
+          };
+          // já atualiza o mundo selecionado dentro do setState
+          setMundoSelecionado(mundoAtualizado);
+          return mundoAtualizado;
+        }
+        return m;
+      });
+      return atualizados;
+    });
+
+    setNovoTopico('');
+  };
+
+  const atualizarConteudo = (index, texto) => {
+    if (!mundoSelecionado) return;
+
+    const novosTopicos = [...(mundoSelecionado.topicos || [])];
+    novosTopicos[index] = { ...novosTopicos[index], conteudo: texto };
+
+    setMundos((prev) =>
+      prev.map((m) => {
+        if (normalize(m.nome) === normalize(mundoSelecionado.nome)) {
+          const mundoAtualizado = { ...m, topicos: novosTopicos };
+          setMundoSelecionado(mundoAtualizado);
+          return mundoAtualizado;
+        }
+        return m;
+      })
+    );
+  };
+
+  const salvarMundo = async () => {
+    if (!mundoSelecionado) return;
+    try {
+      const novosMundos = mundos.map((m) =>
+        normalize(m.nome) === normalize(mundoSelecionado.nome)
+          ? mundoSelecionado
+          : m
+      );
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(novosMundos));
+      alert('Mundo salvo com sucesso!');
+    } catch (e) {
+      console.log('Erro ao salvar mundo:', e);
+      alert('Erro ao salvar o mundo.');
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      {!mundoSelecionado ? (
+        <>
+          <Text style={styles.titulo}>Construção de Mundo</Text>
+          <Text style={styles.subtitulo}>
+            Crie um novo mundo e explore suas camadas criativas.
+          </Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Nome do mundo"
+            value={nomeMundo}
+            onChangeText={setNomeMundo}
+          />
+
+          <View style={styles.centered}>
+            <BotaoCustomizado title="Criar Mundo" onPress={criarNovoMundo} />
+          </View>
+
+          <View style={styles.mundosContainer}>
+            {mundos.map((m, i) => (
+              <BotaoCustomizado
+                key={i}
+                title={m.nome}
+                onPress={() => selecionarMundo(m.nome)}
+              />
+            ))}
+          </View>
+        </>
+      ) : (
+        <>
+          <Text style={styles.titulo}>🌍 {mundoSelecionado.nome}</Text>
+
+          <Text style={styles.subtitulo}>
+            Explore temas como sociedade, religião, cultura e muito mais.
+          </Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Adicionar novo tema (opcional)"
+            value={novoTopico}
+            onChangeText={setNovoTopico}
+          />
+
+          <View style={styles.centered}>
+            <BotaoCustomizado title="Adicionar Tema" onPress={adicionarTopico} />
+          </View>
+
+          <ScrollView style={styles.lista}>
+            {temas.map((tema, i) => {
+              const existenteIndex = (mundoSelecionado.topicos || []).findIndex(
+                (t) => normalize(t.tema) === normalize(tema)
+              );
+              const conteudo =
+                existenteIndex >= 0
+                  ? mundoSelecionado.topicos[existenteIndex].conteudo
+                  : '';
+              return (
+                <View key={i} style={styles.topicoContainer}>
+                  <Text style={styles.temaTitulo}>{tema}</Text>
+                  <TextInput
+                    style={styles.areaTexto}
+                    multiline
+                    placeholder={`Descreva o aspecto de ${tema.toLowerCase()} do seu mundo...`}
+                    value={conteudo}
+                    onChangeText={(texto) => {
+                      if (existenteIndex >= 0) {
+                        atualizarConteudo(existenteIndex, texto);
+                      } else {
+                        adicionarTopico(tema);
+                      }
+                    }}
+                  />
+                </View>
+              );
+            })}
+          </ScrollView>
+
+          <View style={styles.centered}>
+            <BotaoCustomizado title="Salvar Mundo" onPress={salvarMundo} />
+          </View>
+        </>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#fff', padding: 20 },
+  titulo: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#4A148C',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  subtitulo: {
+    fontSize: 15,
+    color: '#6C5B7B',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#B39DDB',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 15,
+  },
+  centered: { alignItems: 'center' },
+  mundosContainer: {
+    backgroundColor: '#ece9f0',
+    borderColor: '#B39DDB',
+    borderWidth: 7,
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  lista: { marginTop: 15 },
+  topicoContainer: {
+    backgroundColor: '#f5f3fa',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+  },
+  temaTitulo: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#4A148C',
+    marginBottom: 8,
+  },
+  areaTexto: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    minHeight: 80,
+    padding: 10,
+    textAlignVertical: 'top',
+    backgroundColor: '#fff',
+  },
+});
