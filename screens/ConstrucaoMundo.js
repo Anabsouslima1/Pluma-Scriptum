@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TextInput, ScrollView, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BotaoCustomizado from '../components/BotaoCustomizado';
 
@@ -46,17 +46,19 @@ export default function ConstrucaoMundo() {
 
   const criarNovoMundo = () => {
     const nome = nomeMundo.trim();
-    if (!nome) return;
+    if (!nome) {
+      Alert.alert('Atenção', 'Por favor, nomeie o mundo antes de criar.');
+      return;
+    }
 
     const jaExiste = mundos.some((m) => normalize(m.nome) === normalize(nome));
     if (jaExiste) {
-      alert('Já existe um mundo com esse nome!');
+      Alert.alert('Atenção', 'Já existe um mundo com esse nome!');
       return;
     }
 
     const novo = { nome, topicos: [] };
-    const atualizados = [...mundos, novo];
-    setMundos(atualizados);
+    setMundos([...mundos, novo]);
     setMundoSelecionado(novo);
     setNomeMundo('');
   };
@@ -66,18 +68,24 @@ export default function ConstrucaoMundo() {
     if (encontrado) {
       setMundoSelecionado(encontrado);
 
-      // Atualiza a lista de temas com os temas salvos no mundo
       const temasDoMundo = encontrado.topicos?.map((t) => t.tema) || [];
       const temasPadrao = ['Sociedade', 'Religião', 'Geografia', 'Cultura', 'Política'];
-
-      // Junta os temas padrão com os do mundo, evitando duplicatas
       const todosTemas = Array.from(new Set([...temasPadrao, ...temasDoMundo]));
       setTemas(todosTemas);
     }
   };
 
   const adicionarTopico = () => {
-    if (!novoTopico.trim() || !mundoSelecionado) return;
+    if (!mundoSelecionado) {
+      Alert.alert('Atenção', 'Selecione ou crie um mundo antes de adicionar um tema.');
+      return;
+    }
+
+    if (!novoTopico.trim()) {
+      Alert.alert('Atenção', 'Digite o nome do tema antes de adicionar.');
+      return;
+    }
+
     const temaNovo = novoTopico.trim();
 
     if (!temas.some((t) => normalize(t) === normalize(temaNovo))) {
@@ -88,15 +96,14 @@ export default function ConstrucaoMundo() {
       (t) => normalize(t.tema) === normalize(temaNovo)
     );
     if (already) {
-      alert('Tema já existe neste mundo.');
+      Alert.alert('Atenção', 'Tema já existe neste mundo.');
       setNovoTopico('');
       return;
-    }
+  }
 
     const novo = { tema: temaNovo, conteudo: '' };
-
     setMundos((prev) => {
-      const atualizados = prev.map((m) => {
+      return prev.map((m) => {
         if (normalize(m.nome) === normalize(mundoSelecionado.nome)) {
           const mundoAtualizado = {
             ...m,
@@ -107,13 +114,11 @@ export default function ConstrucaoMundo() {
         }
         return m;
       });
-      return atualizados;
     });
 
     setNovoTopico('');
   };
 
-  // Nova função para atualizar ou criar conteúdo de qualquer tema
   const atualizarOuCriarConteudo = (tema, texto) => {
     if (!mundoSelecionado) return;
 
@@ -122,37 +127,30 @@ export default function ConstrucaoMundo() {
     );
 
     if (existenteIndex >= 0) {
-      // Atualiza conteúdo existente
       const novosTopicos = [...mundoSelecionado.topicos];
       novosTopicos[existenteIndex] = { ...novosTopicos[existenteIndex], conteudo: texto };
 
       setMundos((prev) =>
-        prev.map((m) => {
-          if (normalize(m.nome) === normalize(mundoSelecionado.nome)) {
-            const mundoAtualizado = { ...m, topicos: novosTopicos };
-            setMundoSelecionado(mundoAtualizado);
-            return mundoAtualizado;
-          }
-          return m;
-        })
+        prev.map((m) =>
+          normalize(m.nome) === normalize(mundoSelecionado.nome)
+            ? { ...m, topicos: novosTopicos }
+            : m
+        )
       );
+      setMundoSelecionado({ ...mundoSelecionado, topicos: novosTopicos });
     } else {
-      // Cria novo tópico com conteúdo digitado
       const novo = { tema, conteudo: texto };
-
       setMundos((prev) =>
-        prev.map((m) => {
-          if (normalize(m.nome) === normalize(mundoSelecionado.nome)) {
-            const mundoAtualizado = {
-              ...m,
-              topicos: [...(m.topicos || []), novo],
-            };
-            setMundoSelecionado(mundoAtualizado);
-            return mundoAtualizado;
-          }
-          return m;
-        })
+        prev.map((m) =>
+          normalize(m.nome) === normalize(mundoSelecionado.nome)
+            ? { ...m, topicos: [...(m.topicos || []), novo] }
+            : m
+        )
       );
+      setMundoSelecionado({
+        ...mundoSelecionado,
+        topicos: [...(mundoSelecionado.topicos || []), novo],
+      });
 
       if (!temas.some((t) => normalize(t) === normalize(tema))) {
         setTemas((prev) => [...prev, tema]);
@@ -169,11 +167,35 @@ export default function ConstrucaoMundo() {
           : m
       );
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(novosMundos));
-      alert('Mundo salvo com sucesso!');
+      Alert.alert('Sucesso', 'Mundo salvo com sucesso!');
     } catch (e) {
       console.log('Erro ao salvar mundo:', e);
-      alert('Erro ao salvar o mundo.');
+      Alert.alert('Erro', 'Erro ao salvar o mundo.');
     }
+  };
+
+  const excluirMundo = () => {
+    if (!mundoSelecionado) return;
+
+    Alert.alert(
+      'Confirmar Exclusão',
+      `Tem certeza que deseja excluir o mundo "${mundoSelecionado.nome}"?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            const restantes = mundos.filter(
+              (m) => normalize(m.nome) !== normalize(mundoSelecionado.nome)
+            );
+            setMundos(restantes);
+            setMundoSelecionado(null);
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(restantes));
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -196,20 +218,25 @@ export default function ConstrucaoMundo() {
             <BotaoCustomizado title="Criar Mundo" onPress={criarNovoMundo} />
           </View>
 
-          <View style={styles.mundosContainer}>
-            {mundos.map((m, i) => (
-              <BotaoCustomizado
-                key={i}
-                title={m.nome}
-                onPress={() => selecionarMundo(m.nome)}
-              />
-            ))}
-          </View>
+          {mundos.length > 0 ? (
+            <View style={styles.mundosContainer}>
+              {mundos.map((m, i) => (
+                <BotaoCustomizado
+                  key={i}
+                  title={m.nome}
+                  onPress={() => selecionarMundo(m.nome)}
+                />
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.semMundos}>
+              Nenhum mundo criado ainda. Crie um novo mundo para começar!
+            </Text>
+          )}
         </>
       ) : (
         <>
           <Text style={styles.titulo}>🌍 {mundoSelecionado.nome}</Text>
-
           <Text style={styles.subtitulo}>
             Explore temas como sociedade, religião, cultura e muito mais.
           </Text>
@@ -251,6 +278,11 @@ export default function ConstrucaoMundo() {
 
           <View style={styles.centered}>
             <BotaoCustomizado title="Salvar Mundo" onPress={salvarMundo} />
+            <BotaoCustomizado
+              title="Excluir Mundo"
+              onPress={excluirMundo}
+              style={{ marginTop: 10, backgroundColor: '#e53935' }}
+            />
           </View>
         </>
       )}
@@ -290,6 +322,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
     width: '100%',
     alignItems: 'center',
+  },
+  semMundos: {
+    textAlign: 'center',
+    color: '#6C5B7B',
+    marginTop: 10,
+    fontStyle: 'italic',
   },
   lista: { marginTop: 15 },
   topicoContainer: {

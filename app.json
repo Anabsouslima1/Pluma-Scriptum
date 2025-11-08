@@ -1,11 +1,7 @@
 {
   "expo": {
     "name": "pluma-scriptum",
-<<<<<<< HEAD
-    "slug": "snack-1b842353-aeac-4b35-99a0-19501e3ad7a4",
-=======
     "slug": "snack-70095049-b05d-495f-8ea2-f5865224bda8",
->>>>>>> 6604ac8 (Atualização da versão mais atualizada do código desenvolvido no Expo Online)
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
