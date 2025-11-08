@@ -25,9 +25,10 @@ export default function Home({ navigation }) {
       {/* Botões */}
       <View style={styles.buttonsContainer}>
         <BotaoCustomizado title="Modo de Escrita" onPress={() => navigation.navigate('CriarObra')} />
-        <BotaoCustomizado title="Modo Reflexão" onPress={() => {}} />
+        <BotaoCustomizado title="Modo Reflexão" onPress={() => navigation.navigate('Reflexao')} />
         <BotaoCustomizado title="Construção de Mundo" onPress={() => navigation.navigate('ConstrucaoMundo')}/>
-        <BotaoCustomizado title="Diários de Personagem" onPress={() => {}} />
+        <BotaoCustomizado title="Criação de Personagem" onPress={() => navigation.navigate('CriarPersonagem')} />
+        <BotaoCustomizado title="Diários de Personagens" onPress={() => navigation.navigate('Diario')} />
       </View>
 
     </SafeAreaView>

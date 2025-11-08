@@ -1,4 +1,3 @@
-// screens/ConstrucaoMundo.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, ScrollView, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -62,27 +61,25 @@ export default function ConstrucaoMundo() {
     setNomeMundo('');
   };
 
- const selecionarMundo = (nome) => {
-  const encontrado = mundos.find((m) => normalize(m.nome) === normalize(nome));
-  if (encontrado) {
-    setMundoSelecionado(encontrado);
+  const selecionarMundo = (nome) => {
+    const encontrado = mundos.find((m) => normalize(m.nome) === normalize(nome));
+    if (encontrado) {
+      setMundoSelecionado(encontrado);
 
-    // Atualiza a lista de temas com os temas salvos no mundo
-    const temasDoMundo = encontrado.topicos?.map((t) => t.tema) || [];
-    const temasPadrao = ['Sociedade', 'Religião', 'Geografia', 'Cultura', 'Política'];
+      // Atualiza a lista de temas com os temas salvos no mundo
+      const temasDoMundo = encontrado.topicos?.map((t) => t.tema) || [];
+      const temasPadrao = ['Sociedade', 'Religião', 'Geografia', 'Cultura', 'Política'];
 
-    // Junta os temas padrão com os do mundo, evitando duplicatas
-    const todosTemas = Array.from(new Set([...temasPadrao, ...temasDoMundo]));
-    setTemas(todosTemas);
-  }
-};
-
+      // Junta os temas padrão com os do mundo, evitando duplicatas
+      const todosTemas = Array.from(new Set([...temasPadrao, ...temasDoMundo]));
+      setTemas(todosTemas);
+    }
+  };
 
   const adicionarTopico = () => {
     if (!novoTopico.trim() || !mundoSelecionado) return;
     const temaNovo = novoTopico.trim();
 
-    // se for novo tema, adiciona também na lista visual
     if (!temas.some((t) => normalize(t) === normalize(temaNovo))) {
       setTemas((prev) => [...prev, temaNovo]);
     }
@@ -98,7 +95,6 @@ export default function ConstrucaoMundo() {
 
     const novo = { tema: temaNovo, conteudo: '' };
 
-    // atualização atômica (garante sincronização imediata)
     setMundos((prev) => {
       const atualizados = prev.map((m) => {
         if (normalize(m.nome) === normalize(mundoSelecionado.nome)) {
@@ -106,7 +102,6 @@ export default function ConstrucaoMundo() {
             ...m,
             topicos: [...(m.topicos || []), novo],
           };
-          // já atualiza o mundo selecionado dentro do setState
           setMundoSelecionado(mundoAtualizado);
           return mundoAtualizado;
         }
@@ -118,22 +113,51 @@ export default function ConstrucaoMundo() {
     setNovoTopico('');
   };
 
-  const atualizarConteudo = (index, texto) => {
+  // Nova função para atualizar ou criar conteúdo de qualquer tema
+  const atualizarOuCriarConteudo = (tema, texto) => {
     if (!mundoSelecionado) return;
 
-    const novosTopicos = [...(mundoSelecionado.topicos || [])];
-    novosTopicos[index] = { ...novosTopicos[index], conteudo: texto };
-
-    setMundos((prev) =>
-      prev.map((m) => {
-        if (normalize(m.nome) === normalize(mundoSelecionado.nome)) {
-          const mundoAtualizado = { ...m, topicos: novosTopicos };
-          setMundoSelecionado(mundoAtualizado);
-          return mundoAtualizado;
-        }
-        return m;
-      })
+    const existenteIndex = (mundoSelecionado.topicos || []).findIndex(
+      (t) => normalize(t.tema) === normalize(tema)
     );
+
+    if (existenteIndex >= 0) {
+      // Atualiza conteúdo existente
+      const novosTopicos = [...mundoSelecionado.topicos];
+      novosTopicos[existenteIndex] = { ...novosTopicos[existenteIndex], conteudo: texto };
+
+      setMundos((prev) =>
+        prev.map((m) => {
+          if (normalize(m.nome) === normalize(mundoSelecionado.nome)) {
+            const mundoAtualizado = { ...m, topicos: novosTopicos };
+            setMundoSelecionado(mundoAtualizado);
+            return mundoAtualizado;
+          }
+          return m;
+        })
+      );
+    } else {
+      // Cria novo tópico com conteúdo digitado
+      const novo = { tema, conteudo: texto };
+
+      setMundos((prev) =>
+        prev.map((m) => {
+          if (normalize(m.nome) === normalize(mundoSelecionado.nome)) {
+            const mundoAtualizado = {
+              ...m,
+              topicos: [...(m.topicos || []), novo],
+            };
+            setMundoSelecionado(mundoAtualizado);
+            return mundoAtualizado;
+          }
+          return m;
+        })
+      );
+
+      if (!temas.some((t) => normalize(t) === normalize(tema))) {
+        setTemas((prev) => [...prev, tema]);
+      }
+    }
   };
 
   const salvarMundo = async () => {
@@ -218,13 +242,7 @@ export default function ConstrucaoMundo() {
                     multiline
                     placeholder={`Descreva o aspecto de ${tema.toLowerCase()} do seu mundo...`}
                     value={conteudo}
-                    onChangeText={(texto) => {
-                      if (existenteIndex >= 0) {
-                        atualizarConteudo(existenteIndex, texto);
-                      } else {
-                        adicionarTopico(tema);
-                      }
-                    }}
+                    onChangeText={(texto) => atualizarOuCriarConteudo(tema, texto)}
                   />
                 </View>
               );
