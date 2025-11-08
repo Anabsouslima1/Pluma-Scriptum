@@ -62,13 +62,6 @@ Mais do que um editor de texto, o Pluma Scriptum é um **companheiro de escrita*
 
 ---
 
-## Status do Projeto
-🚧 Em fase inicial de concepção.  
-- Primeiros passos: Estruturação da ideia e planejamento de funcionalidades.
-- Próximos passos: Mapeamento de telas e início da implementação.
-
----
-
 ## Contribuições
 Futuramente, o projeto poderá receber contribuições da comunidade de escritores e desenvolvedores.  
 Por enquanto, feedbacks e ideias são bem-vindos! 💬
