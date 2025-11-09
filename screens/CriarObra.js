@@ -54,10 +54,10 @@ export default function CriarObra({ navigation }) {
 
     const nova = {
       nome: nomeLimpo,
-      descricao: descricaoObra.trim(),
+      descricao: (descricaoObra || '').trim(),
       tipo: tipoObraSelecionada,
       capitulos: [],
-      conteudo: '', // para poemas ou modo livre
+      conteudo: '',
     };
 
     setObras([...obras, nova]);
@@ -109,14 +109,29 @@ export default function CriarObra({ navigation }) {
 
   const contagemTotalPalavras = () => {
     if (!obraSelecionada) return 0;
+
     if (obraSelecionada.tipo === 'poema' || obraSelecionada.tipo === 'livre') {
-      return obraSelecionada.conteudo.trim().split(/\s+/).length;
+      return (obraSelecionada.conteudo || '').trim().split(/\s+/).filter(Boolean).length;
     }
-    return obraSelecionada.capitulos.reduce((total, cap) => {
-      if (!cap.conteudo?.trim()) return total;
-      return total + cap.conteudo.trim().split(/\s+/).length;
-    }, 0);
-  };
+
+    if (obraSelecionada.tipo === 'romance') {
+      return obraSelecionada.capitulos.reduce((total, cap) => {
+        if (!cap.conteudo?.trim()) return total;
+        return total + cap.conteudo.trim().split(/\s+/).filter(Boolean).length;
+      }, 0);
+    }
+
+    if (obraSelecionada.tipo === 'conto') {
+      const palavrasPrincipal = (obraSelecionada.conteudo || '').trim().split(/\s+/).filter(Boolean).length;
+      const palavrasPartes = obraSelecionada.capitulos.reduce((total, cap) => {
+        if (!cap.conteudo?.trim()) return total;
+        return total + cap.conteudo.trim().split(/\s+/).filter(Boolean).length;
+      }, 0);
+      return palavrasPrincipal + palavrasPartes;
+    }
+  return 0;
+};
+
 
   return (
     <View style={styles.container}>
@@ -147,6 +162,12 @@ export default function CriarObra({ navigation }) {
           </View>
 
           {obras.length > 0 && (
+          <View style={{ marginTop: 25, alignItems: 'center' }}>
+            <Text style={{ fontStyle: 'italic', fontSize: 18, fontWeight: '600' }}>Suas obras</Text>
+          </View>
+          )}
+
+          {obras.length > 0 && (
             <View style={styles.obrasContainer}>
               {obras.map((obra, index) => (
                 <BotaoCustomizado
@@ -160,9 +181,11 @@ export default function CriarObra({ navigation }) {
         </>
       ) : (
         <>
-          <Text style={styles.nomeObra}>{obraSelecionada.tipo.charAt(0).toUpperCase() + obraSelecionada.tipo.slice(1)}: {obraSelecionada.nome}</Text>
+          <Text style={styles.nomeObra}>
+            {obraSelecionada.tipo.charAt(0).toUpperCase() + obraSelecionada.tipo.slice(1)}: {obraSelecionada.nome}
+          </Text>
 
-          {obraSelecionada.tipo !== 'poema' && obraSelecionada.tipo !== 'livre' ? (
+          {obraSelecionada.tipo === 'romance' && (
             <>
               <TextInput
                 style={styles.inputObra}
@@ -198,20 +221,87 @@ export default function CriarObra({ navigation }) {
                       novosCap[index].titulo = novoTitulo;
                       atualizarObraSelecionada({ ...obraSelecionada, capitulos: novosCap });
                     }}
+                    tipo={obraSelecionada.tipo}
                   />
                 ))}
               </ScrollView>
             </>
-          ) : (
-            <TextInput
-              style={styles.textoPoema}
-              value={obraSelecionada.conteudo}
-              onChangeText={texto =>
-                atualizarObraSelecionada({ ...obraSelecionada, conteudo: texto })
-              }
-              placeholder="Escreva seu texto aqui..."
-              multiline
-            />
+          )}
+
+          {/* CONTO */}
+          {obraSelecionada.tipo === 'conto' && (
+            <>
+              <TextInput
+                style={styles.textoConto}
+                value={obraSelecionada.conteudo}
+                onChangeText={texto => atualizarObraSelecionada({ ...obraSelecionada, conteudo: texto })}
+                placeholder="Escreva seu conto aqui..."
+                multiline
+              />
+              <ScrollView>
+              <Text style={styles.nomeObra}>Ou adicione partes:</Text>
+              <TextInput
+                style={styles.inputObra}
+                value={novoTituloCap}
+                onChangeText={setNovoTituloCap}
+                placeholder="Título da parte"
+              />
+
+              <View style={{ alignItems: 'center', marginVertical: 10 }}>
+                <BotaoCustomizado title="Adicionar parte" onPress={adicionarCapitulo} />
+              </View>
+                {obraSelecionada.capitulos.map((cap, index) => (
+                  <CapituloItem
+                    key={index}
+                    numero={index + 1}
+                    titulo={cap.titulo}
+                    conteudo={cap.conteudo}
+                    onChangeConteudo={text => atualizarConteudo(index, text)}
+                    onExcluir={() => excluirCapitulo(index)}
+                    onChangeTituloLocal={novoTitulo => {
+                      const novosCap = [...obraSelecionada.capitulos];
+                      novosCap[index].titulo = novoTitulo;
+                      atualizarObraSelecionada({...obraSelecionada, capitulos: novosCap});
+                    }}
+                    tipo={obraSelecionada.tipo}
+                  />
+                ))}
+              </ScrollView>
+            </>
+          )}
+
+          {/* POEMA */}
+          {obraSelecionada.tipo === 'poema' && (
+            <>
+              <TextInput
+                style={styles.textoPoema}
+                value={obraSelecionada.conteudo}
+                onChangeText={texto =>
+                  atualizarObraSelecionada({ ...obraSelecionada, conteudo: texto })
+                }
+                placeholder="Escreva seu poema aqui..."
+                multiline
+              />
+            </>
+          )}
+
+          {/* MODO LIVRE */}
+          {obraSelecionada.tipo === 'livre' && (
+            <>
+              <Text style={styles.label}>Escreva livremente:</Text>
+              <TextInput
+                style={styles.textoLivre}
+                value={obraSelecionada.conteudo}
+                onChangeText={texto =>
+                  atualizarObraSelecionada({ ...obraSelecionada, conteudo: texto })
+                }
+                placeholder="Escreva seu texto aqui..."
+                multiline
+              />
+              <Text style={styles.estatisticas}>
+                Total de palavras: {contagemTotalPalavras()}
+              </Text>
+            </>
           )}
 
           <View style={styles.centeredContent}>
@@ -241,9 +331,26 @@ export default function CriarObra({ navigation }) {
                 );
               }}
             />
-            <Text style={styles.estatisticas}>
-              Total de palavras: {contagemTotalPalavras()}
-            </Text>
+            {obraSelecionada.tipo === 'poema' && (
+              <Text style={styles.estatisticas}>
+                Total de versos: {(obraSelecionada.conteudo || '').split('\n').filter(linha => linha.trim().length > 0).length}
+              </Text>
+            )}
+            {obraSelecionada.tipo === 'livre' && (
+              <Text style={styles.estatisticas}>
+                Total de palavras: {contagemTotalPalavras()}
+              </Text>
+            )}
+            {(obraSelecionada.tipo === 'romance') && (
+              <Text style={styles.estatisticas}>
+                Total de palavras: {contagemTotalPalavras()} | Total de capítulos: {obraSelecionada.capitulos.length}
+              </Text>
+            )}
+            {(obraSelecionada.tipo === 'conto') && (
+              <Text style={styles.estatisticas}>
+                Total de palavras: {contagemTotalPalavras()} | Total de partes: {obraSelecionada.capitulos.length}
+              </Text>
+            )}
           </View>
         </>
       )}
@@ -252,15 +359,15 @@ export default function CriarObra({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
+  container: { flex: 1, padding: 20, paddingBottom: 50, backgroundColor: '#fff' },
   nomeObra: { fontSize: 18, fontWeight: '600', marginBottom: 5 },
   inputObra: { borderWidth: 1, borderColor: '#ccc', borderRadius: 10, padding: 10, marginBottom: 15 },
   listaCapitulos: { marginTop: 10, marginBottom: 15 },
   estatisticas: { fontSize: 14, fontWeight: '600', marginTop: 10 },
   obrasContainer: {
-    backgroundColor: '#ece9f0',
+    backgroundColor: '#faf6ffff',
     borderColor: '#B39DDB',
-    borderWidth: 7,
+    borderWidth: 5,
     borderRadius: 16,
     padding: 16,
     marginTop: 10,
@@ -268,13 +375,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   centeredContent: { alignItems: 'center' },
-  textoPoema: {
+  textoConto: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
     padding: 10,
-    height: 300,
+    height: 400,
     textAlignVertical: 'top',
     marginBottom: 15,
   },
+  textoPoema: {
+    borderWidth: 1,
+    borderColor: '#ceb3daff',
+    borderRadius: 10,
+    padding: 10,
+    height: 580,
+    textAlignVertical: 'top',
+    marginBottom: 15,
+    backgroundColor: '#faf4fdff',
+  },
+  textoLivre: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    padding: 10,
+    height: 350,
+    textAlignVertical: 'top',
+    marginBottom: 15,
+    backgroundColor: '#f4f4f4',
+  },
+  label: { fontSize: 16, fontWeight: '500', marginBottom: 5 },
 });

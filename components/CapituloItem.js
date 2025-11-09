@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Entypo } from '@expo/vector-icons'; 
 
-export default function CapituloItem({ numero, titulo, conteudo, onChangeConteudo, onExcluir, onChangeTituloLocal }) {
+export default function CapituloItem({ numero, titulo, conteudo, onChangeConteudo, onExcluir, onChangeTituloLocal, tipo }) {
   const [expanded, setExpanded] = useState(false);
   const [editandoTitulo, setEditandoTitulo] = useState(false);
   const [novoTitulo, setNovoTitulo] = useState(titulo);
@@ -27,9 +27,10 @@ export default function CapituloItem({ numero, titulo, conteudo, onChangeConteud
           />
         ) : (
           <View style={styles.tituloLinha}>
-            <Text style={styles.titulo}>
-              Capítulo {numero}: {novoTitulo}
+            <Text style={styles.capituloTitulo}>
+              {tipo === 'conto' ? `Parte ${novoTitulo}` : `Capítulo ${numero}: ${novoTitulo}`}
             </Text>
+
             <TouchableOpacity onPress={() => setEditandoTitulo(true)} style={styles.icone}>
               <Entypo name="edit" size={18} color="#666" />
             </TouchableOpacity>
@@ -38,7 +39,7 @@ export default function CapituloItem({ numero, titulo, conteudo, onChangeConteud
       </TouchableOpacity>
 
       {expanded && (
-        <>
+        <View>
           <TextInput
             style={styles.input}
             multiline
@@ -49,14 +50,24 @@ export default function CapituloItem({ numero, titulo, conteudo, onChangeConteud
           <Text style={styles.palavras}>
             Palavras: {conteudo.replace(/\n/g, ' ').trim().split(/\s+/).filter(p => p.length > 0).length}
           </Text>
-          <TouchableOpacity style={styles.botaoExcluir} onPress={onExcluir}>
-            <Text style={styles.botaoTexto}>Excluir</Text>
-          </TouchableOpacity>
-        </>
+
+          {editandoTitulo && (
+            <TouchableOpacity
+              style={styles.botaoExcluir}
+              onPress={event => {
+                event.stopPropagation(); // impede fechar capítulo
+                onExcluir();
+              }}
+            >
+              <Text style={styles.botaoTexto}>Excluir</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       )}
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
