@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { useRoute } from '@react-navigation/native';
 import { View, Text, TextInput, ScrollView, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Picker } from '@react-native-picker/picker';
 import CapituloItem from '../components/CapituloItem';
 import BotaoCustomizado from '../components/BotaoCustomizado';
 
 export default function CriarObra({ navigation }) {
+  const route = useRoute();
+
   const [obras, setObras] = useState([]);
   const [obraSelecionada, setObraSelecionada] = useState(null);
   const [nomeObra, setNomeObra] = useState('');
+  const [descricaoObra, setDescricaoObra] = useState('');
+  const [tipoObraSelecionada, setTipoObraSelecionada] = useState('romance');
   const [novoTituloCap, setNovoTituloCap] = useState('');
 
-  // Carrega obras do AsyncStorage
+  // Carrega obras
   useEffect(() => {
     (async () => {
       try {
@@ -22,7 +28,7 @@ export default function CriarObra({ navigation }) {
     })();
   }, []);
 
-  // Salva obras no AsyncStorage sempre que mudam
+  // Salva obras
   useEffect(() => {
     (async () => {
       try {
@@ -33,42 +39,56 @@ export default function CriarObra({ navigation }) {
     })();
   }, [obras]);
 
-  // Criar nova obra
+  useEffect(() => {
+    if (route.params?.nomeObra) {
+      const encontrada = obras.find(o => o.nome === route.params.nomeObra);
+      if (encontrada) setObraSelecionada(encontrada);
+    }
+  }, [route.params, obras]);
+
   const criarNovaObra = () => {
     const nomeLimpo = nomeObra.trim();
     if (!nomeLimpo) return Alert.alert('Atenção!', 'Digite o nome da obra antes de criar.');
-
-    if (obras.some((o) => o.nome.toLowerCase() === nomeLimpo.toLowerCase()))
+    if (obras.some(o => o.nome.toLowerCase() === nomeLimpo.toLowerCase()))
       return Alert.alert('Atenção!', 'Já existe uma obra com esse nome!');
 
-    const nova = { nome: nomeLimpo, capitulos: [] };
+    const nova = {
+      nome: nomeLimpo,
+      descricao: descricaoObra.trim(),
+      tipo: tipoObraSelecionada,
+      capitulos: [],
+      conteudo: '', // para poemas ou modo livre
+    };
+
     setObras([...obras, nova]);
     setObraSelecionada(nova);
     setNomeObra('');
+    setDescricaoObra('');
+    setTipoObraSelecionada('romance');
   };
 
-  // Adicionar capítulo
   const adicionarCapitulo = () => {
-    if (!novoTituloCap.trim()) return Alert.alert('Atenção!', 'Digite o nome do capítulo antes de adicionar.');
+    if (!novoTituloCap.trim())
+      return Alert.alert('Atenção!', 'Digite o nome do capítulo antes de adicionar.');
     const novoCapitulo = { titulo: novoTituloCap.trim(), conteudo: '' };
-    atualizarObraSelecionada({ ...obraSelecionada, capitulos: [...obraSelecionada.capitulos, novoCapitulo] });
+    atualizarObraSelecionada({
+      ...obraSelecionada,
+      capitulos: [...obraSelecionada.capitulos, novoCapitulo],
+    });
     setNovoTituloCap('');
   };
 
-  // Atualiza obra selecionada
   const atualizarObraSelecionada = (novaObra) => {
     setObraSelecionada(novaObra);
-    setObras((prev) => prev.map((o) => (o.nome === novaObra.nome ? novaObra : o)));
+    setObras(prev => prev.map(o => (o.nome === novaObra.nome ? novaObra : o)));
   };
 
-  // Atualiza conteúdo do capítulo
   const atualizarConteudo = (index, texto) => {
     const novosCap = [...obraSelecionada.capitulos];
     novosCap[index].conteudo = texto;
     atualizarObraSelecionada({ ...obraSelecionada, capitulos: novosCap });
   };
 
-  // Excluir capítulo
   const excluirCapitulo = (index) => {
     Alert.alert(
       'Excluir Capítulo',
@@ -87,9 +107,11 @@ export default function CriarObra({ navigation }) {
     );
   };
 
-  // Contagem de palavras
   const contagemTotalPalavras = () => {
     if (!obraSelecionada) return 0;
+    if (obraSelecionada.tipo === 'poema' || obraSelecionada.tipo === 'livre') {
+      return obraSelecionada.conteudo.trim().split(/\s+/).length;
+    }
     return obraSelecionada.capitulos.reduce((total, cap) => {
       if (!cap.conteudo?.trim()) return total;
       return total + cap.conteudo.trim().split(/\s+/).length;
@@ -107,6 +129,19 @@ export default function CriarObra({ navigation }) {
             onChangeText={setNomeObra}
             placeholder="Digite o nome da obra"
           />
+
+          <Text style={styles.nomeObra}>Selecione o tipo:</Text>
+          <Picker
+            selectedValue={tipoObraSelecionada}
+            onValueChange={setTipoObraSelecionada}
+            style={{ backgroundColor: '#e6def3ff', marginBottom: 15 }}
+          >
+            <Picker.Item label="Romance" value="romance" />
+            <Picker.Item label="Conto" value="conto" />
+            <Picker.Item label="Poema" value="poema" />
+            <Picker.Item label="Modo Livre" value="livre" />
+          </Picker>
+
           <View style={styles.centeredContent}>
             <BotaoCustomizado title="Criar Obra" onPress={criarNovaObra} />
           </View>
@@ -125,40 +160,64 @@ export default function CriarObra({ navigation }) {
         </>
       ) : (
         <>
-          <Text style={styles.nomeObra}>Obra: {obraSelecionada.nome}</Text>
-          <TextInput
-            style={styles.inputObra}
-            value={novoTituloCap}
-            onChangeText={setNovoTituloCap}
-            placeholder="Nome do capítulo"
-          />
-          <View style={styles.centeredContent}>
-            <BotaoCustomizado title="Adicionar Capítulo" onPress={adicionarCapitulo} />
-          </View>
+          <Text style={styles.nomeObra}>{obraSelecionada.tipo.charAt(0).toUpperCase() + obraSelecionada.tipo.slice(1)}: {obraSelecionada.nome}</Text>
 
-          <ScrollView style={styles.listaCapitulos}>
-            {obraSelecionada.capitulos.map((cap, index) => (
-              <CapituloItem
-                key={index}
-                numero={index + 1}
-                titulo={cap.titulo}
-                conteudo={cap.conteudo}
-                onChangeConteudo={(text) => atualizarConteudo(index, text)}
-                onExcluir={() => excluirCapitulo(index)}
-                // ✅ Passa função para editar título inline com ícone de lápis
-                onChangeTituloLocal={(novoTitulo) => {
-                  const novosCap = [...obraSelecionada.capitulos];
-                  novosCap[index].titulo = novoTitulo;
-                  atualizarObraSelecionada({ ...obraSelecionada, capitulos: novosCap });
-                }}
+          {obraSelecionada.tipo !== 'poema' && obraSelecionada.tipo !== 'livre' ? (
+            <>
+              <TextInput
+                style={styles.inputObra}
+                value={obraSelecionada.descricao}
+                onChangeText={texto =>
+                  atualizarObraSelecionada({ ...obraSelecionada, descricao: texto })
+                }
+                placeholder="Digite a descrição da obra"
               />
-            ))}
-          </ScrollView>
+
+              <Text style={styles.nomeObra}>Capítulos:</Text>
+              <TextInput
+                style={styles.inputObra}
+                value={novoTituloCap}
+                onChangeText={setNovoTituloCap}
+                placeholder="Nome do capítulo"
+              />
+              <View style={styles.centeredContent}>
+                <BotaoCustomizado title="Adicionar Capítulo" onPress={adicionarCapitulo} />
+              </View>
+
+              <ScrollView style={styles.listaCapitulos}>
+                {obraSelecionada.capitulos.map((cap, index) => (
+                  <CapituloItem
+                    key={index}
+                    numero={index + 1}
+                    titulo={cap.titulo}
+                    conteudo={cap.conteudo}
+                    onChangeConteudo={text => atualizarConteudo(index, text)}
+                    onExcluir={() => excluirCapitulo(index)}
+                    onChangeTituloLocal={novoTitulo => {
+                      const novosCap = [...obraSelecionada.capitulos];
+                      novosCap[index].titulo = novoTitulo;
+                      atualizarObraSelecionada({ ...obraSelecionada, capitulos: novosCap });
+                    }}
+                  />
+                ))}
+              </ScrollView>
+            </>
+          ) : (
+            <TextInput
+              style={styles.textoPoema}
+              value={obraSelecionada.conteudo}
+              onChangeText={texto =>
+                atualizarObraSelecionada({ ...obraSelecionada, conteudo: texto })
+              }
+              placeholder="Escreva seu texto aqui..."
+              multiline
+            />
+          )}
 
           <View style={styles.centeredContent}>
             <BotaoCustomizado
-              title="Salvar Capítulos"
-              onPress={() => Alert.alert('Sucesso', 'Capítulos salvos!')}
+              title="Salvar Obra"
+              onPress={() => Alert.alert('Sucesso', 'Obra salva!')}
               style={{ marginTop: 10 }}
             />
             <BotaoCustomizado
@@ -174,7 +233,7 @@ export default function CriarObra({ navigation }) {
                       text: 'Excluir',
                       style: 'destructive',
                       onPress: () => {
-                        setObras(obras.filter((o) => o.nome !== obraSelecionada.nome));
+                        setObras(obras.filter(o => o.nome !== obraSelecionada.nome));
                         setObraSelecionada(null);
                       },
                     },
@@ -183,8 +242,7 @@ export default function CriarObra({ navigation }) {
               }}
             />
             <Text style={styles.estatisticas}>
-              Total de capítulos: {obraSelecionada.capitulos.length} | Total de
-              palavras: {contagemTotalPalavras()}
+              Total de palavras: {contagemTotalPalavras()}
             </Text>
           </View>
         </>
@@ -199,6 +257,24 @@ const styles = StyleSheet.create({
   inputObra: { borderWidth: 1, borderColor: '#ccc', borderRadius: 10, padding: 10, marginBottom: 15 },
   listaCapitulos: { marginTop: 10, marginBottom: 15 },
   estatisticas: { fontSize: 14, fontWeight: '600', marginTop: 10 },
-  obrasContainer: { backgroundColor: '#ece9f0', borderColor: '#B39DDB', borderWidth: 7, borderRadius: 16, padding: 16, marginTop: 10, width: '100%', alignItems: 'center' },
+  obrasContainer: {
+    backgroundColor: '#ece9f0',
+    borderColor: '#B39DDB',
+    borderWidth: 7,
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
   centeredContent: { alignItems: 'center' },
+  textoPoema: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    padding: 10,
+    height: 300,
+    textAlignVertical: 'top',
+    marginBottom: 15,
+  },
 });

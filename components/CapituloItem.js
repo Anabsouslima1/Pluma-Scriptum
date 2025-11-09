@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
-import { Entypo } from '@expo/vector-icons'; // lápis
+import { Entypo } from '@expo/vector-icons'; 
 
 export default function CapituloItem({ numero, titulo, conteudo, onChangeConteudo, onExcluir, onChangeTituloLocal }) {
   const [expanded, setExpanded] = useState(false);

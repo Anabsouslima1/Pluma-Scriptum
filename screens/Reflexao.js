@@ -52,7 +52,7 @@ export default function Reflexao() {
     ],
     '😴': [
       'Você fez bem até aqui! Dê uma pausa; o tempo ajuda a maturar suas ideias.',
-      'As melhores ideias às vezes podem surgir de sonhos. Descanse bem!',
+      'As melhores ideias às vezes surgem de sonhos. Descanse bem!',
       'Revise algo simples, sem pressa; pequenos passos também contam.',
       'A energia baixa não significa bloqueio, apenas sinal de cuidar de si.',
       'Ouça uma música suave e deixe sua mente se reconectar.'
@@ -62,7 +62,7 @@ export default function Reflexao() {
       'Escreva sem pressa. O ritmo tranquilo também é inspiração.',
       'Talvez seja um bom momento para organizar pensamentos e criar estrutura.',
       'Cada palavra é um passo — o importante é começar.',
-      'Um estado neutro permite olhar para suas criações com objetividade'
+      'Um estado neutro permite olhar para suas criações com objetividade.'
     ],
   };
 

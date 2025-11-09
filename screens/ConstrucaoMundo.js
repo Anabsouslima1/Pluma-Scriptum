@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, ScrollView, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BotaoCustomizado from '../components/BotaoCustomizado';
+import { Entypo } from '@expo/vector-icons';
 
 const STORAGE_KEY = '@mundos';
 
 export default function ConstrucaoMundo() {
+  const navigation = useNavigation();
   const [mundos, setMundos] = useState([]);
   const [mundoSelecionado, setMundoSelecionado] = useState(null);
   const [nomeMundo, setNomeMundo] = useState('');
@@ -17,6 +21,10 @@ export default function ConstrucaoMundo() {
     'Cultura',
     'Política',
   ]);
+
+  const [obrasDisponiveis, setObrasDisponiveis] = useState([]);
+  const [obraRelacionada, setObraRelacionada] = useState('');
+  const [editandoObra, setEditandoObra] = useState(false);
 
   const normalize = (s = '') => s.trim().toLowerCase();
 
@@ -32,6 +40,48 @@ export default function ConstrucaoMundo() {
     })();
   }, []);
 
+  // Carregar obras existentes para o Picker
+  useEffect(() => {
+    (async () => {
+      try {
+        const dadosObras = await AsyncStorage.getItem('@obras');
+        if (dadosObras) setObrasDisponiveis(JSON.parse(dadosObras));
+      } catch (e) {
+        console.log('Erro ao carregar obras:', e);
+      }
+    })();
+  }, []);
+
+  // Atualiza obras relacionadas inválidas
+  useEffect(() => {
+    if (!mundos || !obrasDisponiveis) return;
+
+    let mundosAlterados = false;
+    const mundosAtualizados = mundos.map((m) => {
+      if (m.obraRelacionada) {
+        const obraExiste = obrasDisponiveis.some((o) => o.nome === m.obraRelacionada);
+        if (!obraExiste) {
+          mundosAlterados = true;
+          return { ...m, obraRelacionada: null };
+        }
+      }
+      return m;
+    });
+
+    if (mundosAlterados) setMundos(mundosAtualizados);
+
+    if (mundoSelecionado?.obraRelacionada) {
+      const obraExiste = obrasDisponiveis.some(
+        (o) => o.nome === mundoSelecionado.obraRelacionada
+      );
+      if (!obraExiste) {
+        setMundoSelecionado({ ...mundoSelecionado, obraRelacionada: null });
+        setObraRelacionada('');
+      }
+    }
+  }, [obrasDisponiveis]);
+
+
   // Salvar mundos automaticamente
   useEffect(() => {
     if (!mundos) return;
@@ -44,6 +94,7 @@ export default function ConstrucaoMundo() {
     })();
   }, [mundos]);
 
+  // Criar Mundos
   const criarNovoMundo = () => {
     const nome = nomeMundo.trim();
     if (!nome) {
@@ -57,16 +108,18 @@ export default function ConstrucaoMundo() {
       return;
     }
 
-    const novo = { nome, topicos: [] };
+    const novo = { nome, topicos: [], obraRelacionada: obraRelacionada || null };
     setMundos([...mundos, novo]);
     setMundoSelecionado(novo);
     setNomeMundo('');
+    setObraRelacionada('');
   };
 
   const selecionarMundo = (nome) => {
     const encontrado = mundos.find((m) => normalize(m.nome) === normalize(nome));
     if (encontrado) {
       setMundoSelecionado(encontrado);
+      setObraRelacionada(encontrado.obraRelacionada || '');
 
       const temasDoMundo = encontrado.topicos?.map((t) => t.tema) || [];
       const temasPadrao = ['Sociedade', 'Religião', 'Geografia', 'Cultura', 'Política'];
@@ -163,7 +216,7 @@ export default function ConstrucaoMundo() {
     try {
       const novosMundos = mundos.map((m) =>
         normalize(m.nome) === normalize(mundoSelecionado.nome)
-          ? mundoSelecionado
+          ? {...mundoSelecionado, obraRelacionada}
           : m
       );
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(novosMundos));
@@ -214,6 +267,18 @@ export default function ConstrucaoMundo() {
             onChangeText={setNomeMundo}
           />
 
+          <Picker
+            selectedValue={obraRelacionada}
+            onValueChange={(valor) => setObraRelacionada(valor)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Relacionar a uma obra" value="" />
+            {obrasDisponiveis.map((obra, index) => (
+              <Picker.Item key={index} label={obra.nome} value={obra.nome} />
+            ))}
+          </Picker>
+
+
           <View style={styles.centered}>
             <BotaoCustomizado title="Criar Mundo" onPress={criarNovoMundo} />
           </View>
@@ -241,16 +306,75 @@ export default function ConstrucaoMundo() {
             Explore temas como sociedade, religião, cultura e muito mais.
           </Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Adicionar novo tema (opcional)"
-            value={novoTopico}
-            onChangeText={setNovoTopico}
-          />
+         <View style={styles.infoContainer}>
+          <Text style={styles.infoTitulo}>Obra relacionada:</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {/* Texto da obra — só navega se não estiver editando */}
+            <TouchableOpacity
+              style={{ flex: 1 }}
+              onPress={() => {
+                if (!editandoObra && mundoSelecionado.obraRelacionada) {
+                  const obra = obrasDisponiveis.find(
+                    (o) => o.nome === mundoSelecionado.obraRelacionada
+                  );
+                  if (obra) navigation.navigate('CriarObra', { nomeObra: obra.nome });
+                }
+              }}
+            >
+              <Text
+                style={[
+                  styles.infoObra,
+                  {
+                    textDecorationLine: editandoObra ? 'none' : 'underline',
+                    color: '#5E35B1',
+                  },
+                ]}
+              >
+                {mundoSelecionado.obraRelacionada || 'Nenhuma obra relacionada'}
+              </Text>
+            </TouchableOpacity>
 
-          <View style={styles.centered}>
-            <BotaoCustomizado title="Adicionar Tema" onPress={adicionarTopico} />
+            {/* Ícone de lápis para editar */}
+            <TouchableOpacity onPress={() => setEditandoObra(true)}>
+              <Entypo name="edit" size={20} color="#5E35B1" style={{ marginLeft: 6 }} />
+            </TouchableOpacity>
           </View>
+
+          {editandoObra && (
+            <View style={{ marginTop: 10, alignItems: 'center' }}>
+              <Picker
+                selectedValue={obraRelacionada}
+                onValueChange={(valor) => setObraRelacionada(valor)}
+                style={{ backgroundColor: '#e6def3ff', width: '100%' }}
+              >
+                <Picker.Item label="Nenhuma obra" value="" />
+                {obrasDisponiveis.map((obra, index) => (
+                  <Picker.Item key={index} label={obra.nome} value={obra.nome} />
+                ))}
+              </Picker>
+
+              <BotaoCustomizado
+                title="Confirmar alteração"
+                onPress={() => {
+                  const atualizado = {
+                    ...mundoSelecionado,
+                    obraRelacionada: obraRelacionada || null,
+                  };
+                  setMundoSelecionado(atualizado);
+                  setMundos((prev) =>
+                    prev.map((m) =>
+                      normalize(m.nome) === normalize(mundoSelecionado.nome)
+                        ? atualizado
+                        : m
+                    )
+                  );
+                  setEditandoObra(false);
+                }}
+                style ={{ marginTop: 10, alignSelf: 'center'}}
+              />
+            </View>
+          )}
+        </View>
 
           <ScrollView style={styles.lista}>
             {temas.map((tema, i) => {
@@ -274,6 +398,17 @@ export default function ConstrucaoMundo() {
                 </View>
               );
             })}
+
+          <TextInput
+            style={styles.input}
+            placeholder="Adicionar novo tema (opcional)"
+            value={novoTopico}
+            onChangeText={setNovoTopico}
+          />
+
+          <View style={styles.centered}>
+            <BotaoCustomizado title="Adicionar Tema" onPress={adicionarTopico} />
+          </View>
           </ScrollView>
 
           <View style={styles.centered}>
@@ -350,5 +485,30 @@ const styles = StyleSheet.create({
     padding: 10,
     textAlignVertical: 'top',
     backgroundColor: '#fff',
+  },
+  picker: {
+    borderWidth: 1,
+    borderColor: '#B39DDB',
+    borderRadius: 10,
+    marginBottom: 15,
+    backgroundColor: '#f7f5fb',
+  },
+  infoContainer: {
+    marginVertical: 10,
+    padding: 10,
+    backgroundColor: '#f8f5ff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#B39DDB',
+  },
+  infoTitulo: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#4A148C',
+  },
+  infoObra: {
+    fontSize: 14,
+    color: '#5E35B1',
+    marginTop: 4,
   },
 });
