@@ -82,6 +82,16 @@ export default function CriarPersonagem({ navigation }) {
       return;
     }
 
+    if (!obraSelecionada) {
+      Alert.alert('Atenção', 'Selecione a obra à qual o personagem pertence!');
+      return;
+    }
+
+    if (!papel) {
+      Alert.alert('Atenção', 'Selecione o papel do personagem!');
+      return;
+    }
+
     const jaExiste = personagens.some(
       (p) => p.nome.toLowerCase() === nomeTrim.toLowerCase()
     );
