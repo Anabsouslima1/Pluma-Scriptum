@@ -1,23 +1,34 @@
 import * as React from 'react';
-import {
-  TextInput,
-  Text,
-  View,
-  Button,
-  StyleSheet,
-  TouchableHighlight,
-  Image,
-  SafeAreaView,
-} from 'react-native';
+import { TextInput, Text, View, Button, StyleSheet, TouchableHighlight, Image, SafeAreaView } from 'react-native';
+import { Audio } from 'expo-av';
 import BotaoCustomizado from '../components/BotaoCustomizado';
 
 export default function Home({ navigation }) {
+  const [sound, setSound] = React.useState();
+
+  async function tocarSom() {
+    const { sound } = await Audio.Sound.createAsync(
+      require('../assets/sounds/plim.wav')
+    );
+    setSound(sound);
+    await sound.playAsync();
+  }
+
+  // Limpar o som quando o componente for desmontado
+  React.useEffect(() => {
+    return sound
+      ? () => {
+          sound.unloadAsync();
+        }
+      : undefined;
+  }, [sound]);
+
   return (
     <SafeAreaView style={styles.container}>
       
       {/* Logo + Título */}
       <View style={styles.headerContainer}>
-        <Image source={require('../assets/logo.jpg')} style={styles.logo} />
+        <Image source={require('../assets/logo.jpg')} style={styles.logo} onTouchEnd={tocarSom} />
         <Text style={styles.title}>Pluma Scriptum</Text>
         <Text style={styles.subtitle}>Seu espaço criativo de escrita!</Text>
       </View>

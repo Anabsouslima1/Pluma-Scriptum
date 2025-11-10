@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   },
   centered: { alignItems: 'center' },
   mundosContainer: {
-    backgroundColor: '#ece9f0',
+    backgroundColor: '#faf6ffff',
     borderColor: '#B39DDB',
     borderWidth: 7,
     borderRadius: 16,

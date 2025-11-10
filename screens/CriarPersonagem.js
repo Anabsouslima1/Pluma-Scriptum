@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Picker } from '@react-native-picker/picker';
-import { View, Text, TextInput, ScrollView, StyleSheet, Alert, Modal, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  StyleSheet,
+  Alert,
+  Modal,
+  TouchableOpacity,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BotaoCustomizado from '../components/BotaoCustomizado';
 
@@ -22,25 +31,44 @@ export default function CriarPersonagem({ navigation }) {
   const [personagemEditando, setPersonagemEditando] = useState(null);
   const [inputFocado, setInputFocado] = useState('');
 
-  const [obras, setObras] = useState([]); 
+  const [obras, setObras] = useState([]);
   const [obraSelecionada, setObraSelecionada] = useState('');
-  const [filtroObra, setFiltroObra] = useState(''); 
-
+  const [filtroObra, setFiltroObra] = useState('');
 
   useEffect(() => {
     (async () => {
       try {
         const dados = await AsyncStorage.getItem(STORAGE_KEY);
-        if (dados) setPersonagens(JSON.parse(dados));
-
         const obrasDados = await AsyncStorage.getItem('@obras');
-        if (obrasDados) setObras(JSON.parse(obrasDados));
+
+        const obrasCarregadas = obrasDados ? JSON.parse(obrasDados) : [];
+        setObras(obrasCarregadas);
+
+        if (dados) {
+          const personagensCarregados = JSON.parse(dados);
+
+          // Verifica se a obra associada ainda existe
+          const personagensCorrigidos = personagensCarregados.map((p) => {
+            const obraAindaExiste = obrasCarregadas.some(
+              (o) => o.nome === p.obraNome
+            );
+            if (!obraAindaExiste) {
+              return { ...p, obraNome: '' }; // remove vínculo
+            }
+            return p;
+          });
+
+          setPersonagens(personagensCorrigidos);
+          await AsyncStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(personagensCorrigidos)
+          );
+        }
       } catch (e) {
         console.log('Erro ao carregar personagens ou obras:', e);
       }
     })();
   }, []);
-
 
   const salvarPersonagens = async (lista) => {
     setPersonagens(lista);
@@ -54,7 +82,9 @@ export default function CriarPersonagem({ navigation }) {
       return;
     }
 
-    const jaExiste = personagens.some(p => p.nome.toLowerCase() === nomeTrim.toLowerCase());
+    const jaExiste = personagens.some(
+      (p) => p.nome.toLowerCase() === nomeTrim.toLowerCase()
+    );
     if (jaExiste) {
       Alert.alert('Atenção', 'Já existe um personagem com este nome!');
       return;
@@ -69,7 +99,7 @@ export default function CriarPersonagem({ navigation }) {
       habilidades: habilidades.trim(),
       aparencia: aparencia.trim(),
       historia: historia.trim(),
-      obraId: obraSelecionada,
+      obraNome: obraSelecionada,
       criadoEm: new Date().toISOString(),
     };
 
@@ -84,6 +114,7 @@ export default function CriarPersonagem({ navigation }) {
     setHistoria('');
     setPapel('');
     setPersonalidade('');
+    setObraSelecionada('');
   };
 
   const excluirPersonagem = async () => {
@@ -94,16 +125,16 @@ export default function CriarPersonagem({ navigation }) {
       `Deseja realmente excluir ${personagemEditando.nome}?`,
       [
         { text: 'Cancelar', style: 'cancel' },
-        { 
-          text: 'Excluir', 
-          style: 'destructive', 
+        {
+          text: 'Excluir',
+          style: 'destructive',
           onPress: async () => {
             const filtrados = personagens.filter(
-              p => p.criadoEm !== personagemEditando.criadoEm
+              (p) => p.criadoEm !== personagemEditando.criadoEm
             );
             await salvarPersonagens(filtrados);
             cancelarEdicao();
-          } 
+          },
         },
       ]
     );
@@ -119,7 +150,7 @@ export default function CriarPersonagem({ navigation }) {
     setHistoria(p.historia || '');
     setPapel(p.papel);
     setPersonalidade(p.personalidade);
-    setObraSelecionada(p.obraId || '');
+    setObraSelecionada(p.obraNome || '');
     setModalVisivel(true);
   };
 
@@ -149,10 +180,10 @@ export default function CriarPersonagem({ navigation }) {
       habilidades: habilidades.trim(),
       aparencia: aparencia.trim(),
       historia: historia.trim(),
-      obraId: obraSelecionada,
+      obraNome: obraSelecionada,
     };
 
-    const atualizados = personagens.map(p =>
+    const atualizados = personagens.map((p) =>
       p.criadoEm === personagemEditando.criadoEm ? atualizado : p
     );
 
@@ -162,8 +193,13 @@ export default function CriarPersonagem({ navigation }) {
     setPersonagemEditando(null);
     setNome('');
     setIdade('');
+    setGenero('');
     setPapel('');
     setPersonalidade('');
+    setHabilidades('');
+    setObraSelecionada('');
+    setAparencia('');
+    setHistoria('');
   };
 
   const renderTags = (p) => (
@@ -174,24 +210,33 @@ export default function CriarPersonagem({ navigation }) {
             styles.tag,
             (() => {
               const papelLower = p.papel.toLowerCase();
-              if (papelLower.includes('antagonista') || papelLower.includes('vilão')) {
+              if (
+                papelLower.includes('antagonista')              ) {
                 return { backgroundColor: '#201e1e', color: '#e53935' };
-              } else if (papelLower.includes('secundário') || papelLower.includes('apoio')) {
+              } else if (
+                papelLower.includes('secundário')
+              ) {
                 return { backgroundColor: '#90caf9', color: '#fff' };
-              } else if (papelLower.includes('protagonista') || papelLower.includes('herói')) {
+              } else if (
+                papelLower.includes('protagonista')              ) {
                 return { backgroundColor: '#a5d6a7', color: '#2e7d32' };
-              } else if (papelLower.includes('mentor') || papelLower.includes('guia')) {
+              } else if (
+                papelLower.includes('mentor')
+              ) {
                 return { backgroundColor: '#ffcc80', color: '#bf360c' };
-              } else if (papelLower.includes('cômico') || papelLower.includes('alívio')) {
+              } else if (
+                papelLower.includes('cômico') ||
+                papelLower.includes('alívio')
+              ) {
                 return { backgroundColor: '#fff59d', color: '#000' };
-              } else if (papelLower.includes('anti-herói') || papelLower.includes('anti-heroi')) {
+              } else if (
+                papelLower.includes('anti-herói')              ) {
                 return { backgroundColor: '#ba68c8', color: '#4a148c' };
               } else {
                 return { backgroundColor: '#b0bec5', color: '#000' };
               }
             })(),
-          ]}
-        >
+          ]}>
           Papel: {p.papel}
         </Text>
       ) : null}
@@ -199,20 +244,13 @@ export default function CriarPersonagem({ navigation }) {
   );
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40}}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 40 }}>
       <Text style={styles.titulo}>Criar Personagem</Text>
-      <Text style={styles.subtitulo}>Explore e dê vida aos seus personagens!</Text>
-
-      <Picker
-        selectedValue={obraSelecionada}
-        onValueChange={(itemValue) => setObraSelecionada(itemValue)}
-        style={styles.pickerContainer}
-      >
-        <Picker.Item label="Selecione a obra" value="" />
-        {obras.map((obra) => (
-          <Picker.Item key={obra.id} label={obra.nome} value={obra.id} />
-        ))}
-      </Picker>
+      <Text style={styles.subtitulo}>
+        Explore e dê vida aos seus personagens!
+      </Text>
 
       <TextInput
         style={[styles.input, inputFocado === 'nome' && styles.inputFocused]}
@@ -239,12 +277,22 @@ export default function CriarPersonagem({ navigation }) {
         onFocus={() => setInputFocado('genero')}
         onBlur={() => setInputFocado('')}
       />
-        <View style={[styles.input, styles.pickerContainer]}>
+      <View style={[styles.input, styles.pickerContainer]}>
+        <Picker
+          selectedValue={obraSelecionada}
+          onValueChange={(itemValue) => setObraSelecionada(itemValue)}
+          style={{ color: '#4A148C' }}>
+          <Picker.Item label="Selecione a obra" value="" />
+          {obras.map((obra) => (
+            <Picker.Item key={obra.nome} label={obra.nome} value={obra.nome} />
+          ))}
+        </Picker>
+      </View>
+      <View style={[styles.input, styles.pickerContainer]}>
         <Picker
           selectedValue={papel}
           onValueChange={(itemValue) => setPapel(itemValue)}
-          style={{ color: '#4A148C' }}
-        >
+          style={{ color: '#4A148C' }}>
           <Picker.Item label="Selecione o papel" value="" />
           <Picker.Item label="Protagonista" value="Protagonista" />
           <Picker.Item label="Anti-Herói" value="Anti-Herói" />
@@ -254,7 +302,11 @@ export default function CriarPersonagem({ navigation }) {
         </Picker>
       </View>
       <TextInput
-        style={[styles.input, inputFocado === 'habilidades' && styles.inputFocused, styles.areaTexto]}
+        style={[
+          styles.input,
+          inputFocado === 'habilidades' && styles.inputFocused,
+          styles.areaTexto,
+        ]}
         placeholder="Habilidades / poderes"
         value={habilidades}
         onChangeText={setHabilidades}
@@ -263,7 +315,11 @@ export default function CriarPersonagem({ navigation }) {
         onBlur={() => setInputFocado('')}
       />
       <TextInput
-        style={[styles.input, inputFocado === 'aparencia' && styles.inputFocused, styles.areaTexto]}
+        style={[
+          styles.input,
+          inputFocado === 'aparencia' && styles.inputFocused,
+          styles.areaTexto,
+        ]}
         placeholder="Aparência física"
         value={aparencia}
         onChangeText={setAparencia}
@@ -272,7 +328,11 @@ export default function CriarPersonagem({ navigation }) {
         onBlur={() => setInputFocado('')}
       />
       <TextInput
-        style={[styles.input, inputFocado === 'historia' && styles.inputFocused, styles.areaTexto]}
+        style={[
+          styles.input,
+          inputFocado === 'historia' && styles.inputFocused,
+          styles.areaTexto,
+        ]}
         placeholder="História curta / background"
         value={historia}
         onChangeText={setHistoria}
@@ -281,7 +341,11 @@ export default function CriarPersonagem({ navigation }) {
         onBlur={() => setInputFocado('')}
       />
       <TextInput
-        style={[styles.input, styles.areaTexto, inputFocado === 'personalidade' && styles.inputFocused]}
+        style={[
+          styles.input,
+          styles.areaTexto,
+          inputFocado === 'personalidade' && styles.inputFocused,
+        ]}
         placeholder="Personalidade / características"
         value={personalidade}
         onChangeText={setPersonalidade}
@@ -292,58 +356,85 @@ export default function CriarPersonagem({ navigation }) {
 
       <View style={styles.centered}>
         <BotaoCustomizado
-          title={personagemEditando ? "Salvar Edição" : "Criar Personagem"}
+          title={personagemEditando ? 'Salvar Edição' : 'Criar Personagem'}
           onPress={personagemEditando ? salvarEdicao : criarPersonagem}
-          style={{ backgroundColor: personagemEditando ? '#7B1FA2' : '#4A148C' }}
+          style={{
+            backgroundColor: personagemEditando ? '#7B1FA2' : '#4A148C',
+          }}
         />
       </View>
+      <Text style={styles.subtitulo}>Filtrar Personagens</Text>
 
       {personagens.length > 0 && (
-        <View>
-         <Picker
-          selectedValue={filtroObra}
-          onValueChange={setFiltroObra}
-          style={styles.pickerContainer}
-        >
-          <Picker.Item label="Todos" value="" />
-          {obras.map((obra) => (
-            <Picker.Item key={obra.id} label={obra.nome} value={obra.id} />
-          ))}
-        </Picker>
-      
-        <Text style={[styles.subtitulo, { marginTop: 20 }]}>
-          Personagens Criados:
-        </Text>
-        </View>
+        <>
+          <View style={[styles.input, styles.pickerContainer, {overflow: 'hidden'}]}>
+            <Picker
+              selectedValue={filtroObra}
+              onValueChange={setFiltroObra}
+              style={styles.pickerContainer}>
+              <Picker.Item label="Todos" value="" />
+              {obras.map((obra) => (
+                <Picker.Item
+                  key={obra.nome}
+                  label={obra.nome}
+                  value={obra.nome}
+                />
+              ))}
+            </Picker>
+          </View>
+
+          <View>
+            <Text style={[styles.subtitulo, { marginTop: 20 }]}>
+              Personagens Criados:
+            </Text>
+          </View>
+        </>
       )}
 
       <View style={{ marginBottom: 20 }}>
         {personagens
-          .filter(p => !filtroObra || p.obraId === filtroObra)
+          .filter((p) => !filtroObra || p.obraNome === filtroObra)
           .map((p, i) => (
             <TouchableOpacity key={i} onPress={() => abrirEdicao(p)}>
               <View style={styles.personagemContainer}>
-                <Text style={styles.nome}>{p.nome}</Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}>
+                  <Text style={styles.nome}>{p.nome}</Text>
+                  {p.obraNome && (
+                    <Text style={styles.tagObraDireita}>
+                      Obra: {p.obraNome}
+                    </Text>
+                  )}
+                </View>
                 {p.papel && renderTags(p)}
-                {p.obraId && (
-                  <Text style={styles.tagObra}>
-                    {obras.find(o => o.id === p.obraId)?.nome || ''}
-                  </Text>
-                )}
               </View>
             </TouchableOpacity>
-        ))}
-
+          ))}
       </View>
 
       {/* Modal de edição */}
       <Modal visible={modalVisivel} animationType="slide" transparent>
         <View style={styles.modalContainer}>
           <ScrollView contentContainerStyle={styles.modalContent}>
+            <TouchableOpacity
+              onPress={cancelarEdicao}
+              style={{ marginBottom: 15, flexDirection: 'row', alignItems: 'center' }}
+            >
+              <Text style={{ fontSize: 24, color: '#4A148C', marginRight: 8 }}>←</Text>
+              <Text style={{ fontSize: 16, color: '#4A148C' }}>Voltar</Text>
+            </TouchableOpacity>
+            
             <Text style={styles.titulo}>Editar Personagem</Text>
 
             <TextInput
-              style={[styles.input, inputFocado === 'nome' && styles.inputFocused]}
+              style={[
+                styles.input,
+                inputFocado === 'nome' && styles.inputFocused,
+              ]}
               placeholder="Nome"
               value={nome}
               onChangeText={setNome}
@@ -351,7 +442,10 @@ export default function CriarPersonagem({ navigation }) {
               onBlur={() => setInputFocado('')}
             />
             <TextInput
-              style={[styles.input, inputFocado === 'idade' && styles.inputFocused]}
+              style={[
+                styles.input,
+                inputFocado === 'idade' && styles.inputFocused,
+              ]}
               placeholder="Idade"
               value={idade}
               onChangeText={setIdade}
@@ -360,7 +454,10 @@ export default function CriarPersonagem({ navigation }) {
               onBlur={() => setInputFocado('')}
             />
             <TextInput
-              style={[styles.input, inputFocado === 'genero' && styles.inputFocused]}
+              style={[
+                styles.input,
+                inputFocado === 'genero' && styles.inputFocused,
+              ]}
               placeholder="Gênero"
               value={genero}
               onChangeText={setGenero}
@@ -369,10 +466,24 @@ export default function CriarPersonagem({ navigation }) {
             />
             <View style={[styles.input, styles.pickerContainer]}>
               <Picker
+                selectedValue={obraSelecionada}
+                onValueChange={(itemValue) => setObraSelecionada(itemValue)}
+                style={{ color: '#4A148C' }}>
+                <Picker.Item label="Selecione a obra" value="" />
+                {obras.map((obra) => (
+                  <Picker.Item
+                    key={obra.nome}
+                    label={obra.nome}
+                    value={obra.nome}
+                  />
+                ))}
+              </Picker>
+            </View>
+            <View style={[styles.input, styles.pickerContainer]}>
+              <Picker
                 selectedValue={papel}
                 onValueChange={(itemValue) => setPapel(itemValue)}
-                style={{ color: '#4A148C' }}
-              >
+                style={{ color: '#4A148C' }}>
                 <Picker.Item label="Selecione o papel" value="" />
                 <Picker.Item label="Protagonista" value="Protagonista" />
                 <Picker.Item label="Secundário" value="Secundário" />
@@ -382,7 +493,11 @@ export default function CriarPersonagem({ navigation }) {
               </Picker>
             </View>
             <TextInput
-              style={[styles.input, inputFocado === 'habilidades' && styles.inputFocused, styles.areaTexto]}
+              style={[
+                styles.input,
+                inputFocado === 'habilidades' && styles.inputFocused,
+                styles.areaTexto,
+              ]}
               placeholder="Habilidades / poderes"
               value={habilidades}
               onChangeText={setHabilidades}
@@ -391,7 +506,11 @@ export default function CriarPersonagem({ navigation }) {
               onBlur={() => setInputFocado('')}
             />
             <TextInput
-              style={[styles.input, inputFocado === 'aparencia' && styles.inputFocused, styles.areaTexto]}
+              style={[
+                styles.input,
+                inputFocado === 'aparencia' && styles.inputFocused,
+                styles.areaTexto,
+              ]}
               placeholder="Aparência física"
               value={aparencia}
               onChangeText={setAparencia}
@@ -400,7 +519,11 @@ export default function CriarPersonagem({ navigation }) {
               onBlur={() => setInputFocado('')}
             />
             <TextInput
-              style={[styles.input, inputFocado === 'historia' && styles.inputFocused, styles.areaTexto]}
+              style={[
+                styles.input,
+                inputFocado === 'historia' && styles.inputFocused,
+                styles.areaTexto,
+              ]}
               placeholder="História curta / background"
               value={historia}
               onChangeText={setHistoria}
@@ -410,7 +533,11 @@ export default function CriarPersonagem({ navigation }) {
             />
 
             <TextInput
-              style={[styles.input, styles.areaTexto, inputFocado === 'personalidade' && styles.inputFocused]}
+              style={[
+                styles.input,
+                styles.areaTexto,
+                inputFocado === 'personalidade' && styles.inputFocused,
+              ]}
               placeholder="Personalidade / características"
               value={personalidade}
               onChangeText={setPersonalidade}
@@ -427,19 +554,20 @@ export default function CriarPersonagem({ navigation }) {
                 style={{ width: '80%', marginBottom: 10 }}
               />
               <BotaoCustomizado
-                title="Cancelar"
-                onPress={cancelarEdicao}
-                style={{ width: '80%', marginBottom: 10, backgroundColor: '#9e9e9e' }}
-              />
-              <BotaoCustomizado
                 title="Excluir Personagem"
                 onPress={excluirPersonagem}
-                style={{ width: '80%', marginBottom: 10, backgroundColor: '#e53935' }}
+                style={{
+                  width: '80%',
+                  marginBottom: 10,
+                  backgroundColor: '#e53935',
+                }}
               />
               <BotaoCustomizado
                 title="📖 Explorar Diário"
                 onPress={() => {
-                  navigation.navigate('DiarioPersonagem', { personagem: personagemEditando });
+                  navigation.navigate('DiarioPersonagem', {
+                    personagem: personagemEditando,
+                  });
                   setModalVisivel(false);
                 }}
                 style={{ width: '80%', backgroundColor: '#6C5B7B' }}
@@ -513,7 +641,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#4A148C',
     fontWeight: '500',
-    alignSelf: 'flex-start'
+    alignSelf: 'flex-start',
   },
   modalContainer: {
     flex: 1,
@@ -556,5 +684,15 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     alignSelf: 'flex-start',
     marginTop: 3,
+  },
+  tagObraDireita: {
+    backgroundColor: '#ffe0b2',
+    color: '#bf360c',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    fontSize: 12,
+    fontWeight: 'bold',
+    top: 27,
   },
 });
