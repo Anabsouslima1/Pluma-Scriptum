@@ -32,7 +32,7 @@ export default function Reflexao() {
     { emoji: '😐', label: 'Neutro' },
   ];
 
-  // 💡 Lista de sugestões baseadas no humor
+  // Lista de sugestões baseadas no humor
   const sugestoesPorHumor = {
     '😄': [
       'Aproveite essa energia! Escreva uma cena curta inspirada em uma memória boa!',
@@ -153,26 +153,6 @@ export default function Reflexao() {
     setModalExcluirVisivel(false);
   };
 
-  <Modal
-    visible={modalExcluirVisivel}
-    transparent
-    animationType="fade"
-    onRequestClose={() => setModalExcluirVisivel(false)}>
-    <View style={styles.modalOverlay}>
-      <View style={styles.modalContainer}>
-        <Text style={styles.modalTitulo}>Deseja excluir esta reflexão?</Text>
-        <View style={styles.centered}>
-          <BotaoCustomizado
-            title="Confirmar Exclusão"
-            onPress={excluirReflexao}
-          />
-          <TouchableOpacity onPress={() => setModalExcluirVisivel(false)}>
-            <Text style={{ color: '#999', marginTop: 10 }}>Cancelar</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  </Modal>;
   return (
     <View style={styles.container}>
       <Text style={styles.titulo}>Modo Reflexão</Text>
@@ -229,6 +209,27 @@ export default function Reflexao() {
         ))}
       </ScrollView>
 
+      <Modal
+          visible={modalExcluirVisivel}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setModalExcluirVisivel(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitulo}>Deseja excluir esta reflexão?</Text>
+              <View style={styles.centered}>
+                <BotaoCustomizado
+                  title="Confirmar Exclusão"
+                  onPress={excluirReflexao}
+                />
+                <TouchableOpacity onPress={() => setModalExcluirVisivel(false)}>
+                  <Text style={{ color: '#999', marginTop: 10 }}>Cancelar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
       {reflexoes.length > 0 && (
         <TouchableOpacity style={styles.botaoSugestao} onPress={gerarSugestao}>
           <Text style={styles.iconeLampada}>💡</Text>
@@ -240,7 +241,10 @@ export default function Reflexao() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 20 },
+  container: { 
+    flex: 1, 
+    backgroundColor: '#fff', 
+    padding: 20 },
   titulo: {
     fontSize: 24,
     fontWeight: '700',
@@ -273,7 +277,9 @@ const styles = StyleSheet.create({
   emojiSelecionado: {
     backgroundColor: '#B39DDB',
   },
-  emoji: { fontSize: 28 },
+  emoji: { 
+    fontSize: 28 
+  },
   input: {
     borderWidth: 1,
     borderColor: '#B39DDB',
@@ -282,19 +288,37 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     backgroundColor: '#fff',
   },
-  areaTexto: { minHeight: 100, textAlignVertical: 'top' },
-  centered: { alignItems: 'center', marginBottom: 15 },
-  lista: { marginTop: 15, marginBottom: 70 },
+  areaTexto: { 
+    minHeight: 100, 
+    textAlignVertical: 'top' 
+  },
+  centered: { 
+    alignItems: 'center', 
+    marginBottom: 15 
+  },
+  lista: { 
+    marginTop: 15, 
+    marginBottom: 70 
+  },
   reflexaoContainer: {
     backgroundColor: '#f5f3fa',
     borderRadius: 10,
     padding: 12,
     marginBottom: 12,
   },
-  dataHora: { fontWeight: '600', color: '#4A148C', marginBottom: 4 },
-  humor: { fontStyle: 'italic', color: '#6C5B7B', marginBottom: 6 },
-  texto: { color: '#333' },
-  // 💡 Estilo do botão "Sugestão do Dia!"
+  dataHora: { 
+    fontWeight: '600', 
+    color: '#4A148C', 
+    marginBottom: 4 
+  },
+  humor: { 
+    fontStyle: 'italic', 
+    color: '#6C5B7B', 
+    marginBottom: 6 
+  },
+  texto: { 
+    color: '#333' 
+  },
   botaoSugestao: {
     position: 'absolute',
     bottom: 20,
@@ -314,5 +338,24 @@ const styles = StyleSheet.create({
     top: 10,
     right: 10,
     zIndex: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    width: '90%',
+  },
+  modalTitulo: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#4A148C',
+    marginBottom: 10,
+    textAlign: 'center',
   },
 });

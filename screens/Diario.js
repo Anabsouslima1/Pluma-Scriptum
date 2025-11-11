@@ -15,31 +15,152 @@ import { Audio } from 'expo-av';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BotaoCustomizado from '../components/BotaoCustomizado';
 import { Modal, TouchableOpacity } from 'react-native';
+import { useRoute } from '@react-navigation/native';
 
 const STORAGE_KEY = '@diariosPersonagem';
 
 const temas = {
-  Geral: [
-    'Qual é o maior medo do seu personagem?',
-    'O que faz seu personagem sorrir genuinamente?',
-    'Qual segredo ele guarda e por quê?',
-  ],
-  Emoções: [
-    'Como ele reage sob pressão?',
-    'Como ele lida com perdas ou fracassos?',
+  Personalidade: [
+    'Que língua(s) fala?',
+    'Possui alguma frase de efeito?',
+    'Repete palavras ou frases frequentemente?',
+    'Otimista ou pessimistas',
+    'Introvertido ou extrovertido?',
+    'Quais são seus maus hábitos?',
+    'Quais são seus bons hábitos?',
+    'Como quer ser visto pelos outros?',
+    'Como é visto pelos outros?',
+    'Como vê a si?',
+    'Como demonstra afeto?',
+    'Quão competitivo é?',
+    'Toma decisões rapidamente ou reflete antes?',
+    'Como reage a elogios?',
+    'Como reage a críticas?',
+    'Qual é o seu maior medo?',
+    'Quais são suas manias ou irritações?',
+    'De qual sentido mais depende?',
+    'Possui alguma deficiência mental?',
+    'É matutino ou noturno?',
+    'Qual o seu maior segredo?',
+    'Qual a sua filosofia de vida?',
+    'Quando foi a última vez que chorou?',
+    'O que o assombra?',
+    'Qual é a sua opinião política?',
+    'Por qual causa se posicionaria?',
+    'Quem é seu ídolo?',
+    'Qual qualidade mais valoriza em um amigo?',
+    'O que o faz rir alto?',
+    'Se pudesse mudar algo em si mesmo, o que seria?',
+    'Possui alguma obsessão?',
+    'Qual é a lembrança mais marcante da infância dele?',
+    'Se pudesse mudar algo em sua vida, o que seria?',
+    'O que o faz sentir raiva ou frustração?',
+    'Qual situação o deixa ansioso?',
+    'Que lembrança desperta nostalgia nele?'
   ],
   Sonhos: [
     'Qual é o maior sonho do seu personagem?',
     'O que ele mais valoriza na vida?',
+    'Que objetivo ele quer alcançar nos próximos 5 anos?',
+    'Se pudesse viver em qualquer lugar, onde seria?',
+    'Que habilidade gostaria de dominar?',
+    'Como ele imagina seu futuro ideal?',
+    'Qual é o desejo que nunca contou a ninguém?',
+    'O que faria se pudesse realizar um sonho agora?',
+    'Que mudança ele gostaria de ver no mundo?',
+    'Como ele se inspira para perseguir seus sonhos?',
+  ],
+  Habilidades: [
+    'Qual talento ele mais valoriza em si mesmo?',
+    'Que habilidade gostaria de aprimorar?',
+    'Como ele aprende melhor: sozinho ou com ajuda?',
+    'Qual conquista o deixou mais orgulhoso?',
+    'Que atividade o faz perder a noção do tempo?',
+    'Como reage quando algo não sai como esperado?',
+    'Qual habilidade o diferencia dos outros?',
+    'O que ele faz quando precisa de criatividade?',
+    'Que desafio gostaria de superar?',
+    'Como ele ajuda outros com seus talentos?',
+  ],
+  Relacionamentos: [
+    'Quem é a pessoa mais importante para ele e por quê?',
+    'Qual sua percepção de família?',
+    'Tem algum animal de estimação?',
+    'Quem é seu melhor amigo?',
+    'Como demonstra cuidado pelos outros?',
+    'Qual conflito pessoal ele já enfrentou com alguém?',
+    'Que segredo guarda de seus amigos?',
+    'Como lida com conflitos familiares?',
+    'Que atitude o faz se sentir conectado aos outros?',
+  ],
+  Aparência: [
+    'Qual é sua altura',
+    'Quanto ele pesa?',
+    'Qual é sua forma/corpo?',
+    'Qual é a cor de seu cabelo?',
+    'Qual é o estilo de seu cabelo',
+    'Qual é a cor de seus olhos?',
+    'Usa óculos ou lentes de contato?',
+    'Possui algum traço facial marcante?',
+    'Costuma usar maquiagem?',
+    'Usa alguma joia?',
+    'Possui cicatrizes?',
+    'Possui marcas de nascença?',
+    'Possui tatuagens?',
+    'Possui alguma deficiência física?',
+    'Qual o tipo de roupa que costuma usar?',
+    'Como estiliza suas roupas?',
+    'Destro ou canhoto?',
+  ],
+  Conflito: [
+    'Como responde a uma ameaça?',
+    'Prefere lutar com os punhos ou com palavras?',
+    'Qual é sua fraqueza?',
+    'Como age com estranhos?',
+    'Qual seria sua arma de escolha?',
+    'Qual pessoa mais despreza?',
+    'Já foi intimidado ou provocado?',
+    'Para onde vai quando está com raiva?',
+    'Quem são seus inimigos e por quê?',
+  ],
+  Hobbies: [
+    'Qual é seu trabalho atual?',
+    'Como se sente em relação ao trabalho atual?',
+    'Quais trabalhos anteriores já teve?',
+    'Quais são seus hobbies?',
+    'Qual é sua formação educacional?',
+    'Quão inteligente é?',
+    'Possui algum treinamento especializado?',
+    'Possui algum talento natural?',
+    'Pratica algum esporte?',
+    'Toca algum instrumento?',
+    'Qual é seu status socioeconômico?',
+  ],
+  Preferências: [
+    'Qual é seu animal favorito?',
+    'Qual animal mais desgosta?',
+    'Qual lugar mais gosta de estar?',
+    'Qual a coisa mais bonita que já viu?',
+    'Qual é sua música favorita?',
+    'Prefere música, arte ou leitura?',
+    'Qual é sua cor favorita?',
+    'Qual é sua comida favorita?',
+    'Qual é sua obra de arte favorita?',
+    'Quem é seu artista favorito?',
+    'Qual é seu dia da semana favorito?',
   ],
 };
 
+const temaKeys = Object.keys(temas);
+
 export default function Diario() {
+  const route = useRoute();
+
   const [diarios, setDiarios] = useState([]);
   const [novoDiario, setNovoDiario] = useState('');
   const [promptAtual, setPromptAtual] = useState('');
   const [personagemSelecionado, setPersonagemSelecionado] = useState('');
-  const [temaSelecionado, setTemaSelecionado] = useState('Geral');
+  const [temaSelecionado, setTemaSelecionado] = useState('Personalidade');
 
   const [modalVisivel, setModalVisivel] = useState(false);
   const [perguntaLivre, setPerguntaLivre] = useState('');
@@ -48,6 +169,16 @@ export default function Diario() {
 
   const [diarioParaExcluir, setDiarioParaExcluir] = useState(null);
   const [modalExcluirVisivel, setModalExcluirVisivel] = useState(false);
+
+  const [perguntasUsadas, setPerguntasUsadas] = useState({
+    Personalidade: [],
+    Sonhos: [],
+    Habilidades: [],
+    Relacionamentos: [],
+    Conflito: [],
+    Hobbies: [],
+    Preferências: [],
+  });
 
   const [sound, setSound] = React.useState();
 
@@ -66,6 +197,12 @@ export default function Diario() {
         }
       : undefined;
   }, [sound]);
+
+  useEffect(() => {
+    if (route.params?.personagem) {
+      setPersonagemSelecionado(route.params.personagem.nome);
+    }
+  }, [route.params]);
 
   useEffect(() => {
     const carregarPersonagens = async () => {
@@ -105,10 +242,28 @@ export default function Diario() {
     })();
   }, [diarios]);
 
-  const gerarPrompt = () => {
-    const perguntas = temas[temaSelecionado] || temas['Geral'];
-    const aleatorio = perguntas[Math.floor(Math.random() * perguntas.length)];
-    setPromptAtual(aleatorio);
+  const gerarPrompt = (tema = temaSelecionado) => {
+    const perguntasTema = temas[tema] || temas['Geral'];
+    const usadas = perguntasUsadas[tema] || [];
+
+    // Filtra perguntas ainda não usadas
+    const disponiveis = perguntasTema.filter((p) => !usadas.includes(p));
+
+    let novaPergunta;
+    if (disponiveis.length === 0) {
+      // Se todas já foram usadas, reseta
+      novaPergunta = perguntasTema[Math.floor(Math.random() * perguntasTema.length)];
+      setPerguntasUsadas((prev) => ({ ...prev, [tema]: [] }));
+    } else {
+      // Escolhe aleatoriamente entre as disponíveis
+      novaPergunta = disponiveis[Math.floor(Math.random() * disponiveis.length)];
+      setPerguntasUsadas((prev) => ({
+        ...prev,
+        [tema]: [...usadas, novaPergunta],
+      }));
+    }
+
+    setPromptAtual(novaPergunta);
   };
 
   const adicionarDiario = () => {
@@ -168,17 +323,52 @@ export default function Diario() {
           ))}
         </Picker>
 
+        {personagemSelecionado ? (
+          diarios.filter((d) => d.personagem === personagemSelecionado).length > 0 ? (
+            diarios
+              .filter((d) => d.personagem === personagemSelecionado)
+              .map((d, i) => (
+                <View key={i} style={styles.diarioContainer}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setDiarioParaExcluir(d);
+                      setModalExcluirVisivel(true);
+                    }}
+                    style={styles.botaoLixeira}>
+                    <Entypo name="trash" size={20} color="#4A148C" />
+                  </TouchableOpacity>
+
+                  <Text style={styles.dataHora}>{d.dataHora}</Text>
+                  <Text style={styles.prompt}>💡 {d.prompt}</Text>
+                  <Text style={styles.texto}>{d.texto}</Text>
+                </View>
+              ))
+          ) : (
+            <Text style={{ textAlign: 'center', color: '#999', marginTop: 20 }}>
+              Esse diário está vazio! Experimente escrever algo nele!
+            </Text>
+          )
+        ) : (
+          <Text style={{ textAlign: 'center', color: '#999', marginTop: 20 }}>
+            Selecione um personagem para visualizar os registros.
+          </Text>
+        )}
+
         <Text style={styles.separador}>Registros Diários</Text>
 
+        <Text style={styles.subtitulo}>
+          Registre momentos, pensamentos ou anotações através de perguntas temáticas!      </Text>
+
         <Text style={styles.label}>Tema:</Text>
+
         <Picker
           selectedValue={temaSelecionado}
           onValueChange={(itemValue) => {
             setTemaSelecionado(itemValue);
-            gerarPrompt();
+            gerarPrompt(itemValue);
           }}
           style={styles.picker}>
-          {Object.keys(temas).map((tema, i) => (
+          {temaKeys.map((tema, i) => (
             <Picker.Item key={i} label={tema} value={tema} />
           ))}
         </Picker>
@@ -194,19 +384,30 @@ export default function Diario() {
         />
 
         <View style={styles.centered}>
-          <BotaoCustomizado
-            title="Registrar Entrada"
-            onPress={() => {
-              adicionarDiario();
-              tocarSom();
-            }}
-          />
+         <BotaoCustomizado
+          title="Registrar Entrada"
+          onPress={() => {
+            if (!personagemSelecionado) {
+              Alert.alert('Atenção', 'Selecione um personagem antes de registrar!');
+              return;
+            }
+
+            if (!novoDiario.trim()) {
+              Alert.alert('Atenção', 'Escreva algo antes de registrar!');
+              return;
+            }
+
+            adicionarDiario(); 
+            tocarSom();
+          }}
+        />
+
           <BotaoCustomizado
             title="Gerar Outra Pergunta"
-            onPress={gerarPrompt}
+            onPress={() => gerarPrompt(temaSelecionado)}
           />
           <BotaoCustomizado
-            title="Pergunta Livre"
+            title="Tema Livre"
             onPress={() => setModalVisivel(true)}
           />
         </View>
@@ -242,7 +443,7 @@ export default function Diario() {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
               <Text style={styles.modalTitulo}>
-                Digite sua pergunta estilizada:
+                Qual será o tema?
               </Text>
               <TextInput
                 style={[styles.input, styles.areaTexto]}
@@ -251,7 +452,7 @@ export default function Diario() {
               />
               <View style={styles.centered}>
                 <BotaoCustomizado
-                  title="Usar Pergunta"
+                  title="Gravar tema"
                   onPress={() => {
                     if (perguntaLivre.trim()) {
                       setPromptAtual(perguntaLivre.trim());
@@ -268,30 +469,7 @@ export default function Diario() {
           </View>
         </Modal>
 
-        {personagemSelecionado ? (
-          diarios
-            .filter((d) => d.personagem === personagemSelecionado)
-            .map((d, i) => (
-              <View key={i} style={styles.diarioContainer}>
-                <TouchableOpacity
-                  onPress={() => {
-                    setDiarioParaExcluir(d);
-                    setModalExcluirVisivel(true);
-                  }}
-                  style={styles.botaoLixeira}>
-                  <Entypo name="trash" size={20} color="#4A148C" />
-                </TouchableOpacity>
-
-                <Text style={styles.dataHora}>{d.dataHora}</Text>
-                <Text style={styles.prompt}>💡 {d.prompt}</Text>
-                <Text style={styles.texto}>{d.texto}</Text>
-              </View>
-            ))
-        ) : (
-          <Text style={{ textAlign: 'center', color: '#999', marginTop: 20 }}>
-            Selecione um personagem para visualizar os registros.
-          </Text>
-        )}
+        
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -336,19 +514,9 @@ const styles = StyleSheet.create({
     minHeight: 100,
     textAlignVertical: 'top',
   },
-  centered: { alignItems: 'center', marginBottom: 15 },
-  diarioContainer: {
-    backgroundColor: '#fdf6e3',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#e0d6b9',
+  centered: { 
+    alignItems: 'center', 
+    marginBottom: 15 
   },
   dataHora: {
     fontWeight: '600',
@@ -392,6 +560,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#4A148C',
     textAlign: 'center',
+    marginTop: 30,
     marginVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#B39DDB',

@@ -438,7 +438,7 @@ export default function CriarPersonagem({ navigation }) {
               <Text style={{ fontSize: 16, color: '#4A148C' }}>Voltar</Text>
             </TouchableOpacity>
             
-            <Text style={styles.titulo}>Editar Personagem</Text>
+            <Text style={styles.titulo}>Visualizar Personagem</Text>
 
             <TextInput
               style={[
@@ -575,7 +575,7 @@ export default function CriarPersonagem({ navigation }) {
               <BotaoCustomizado
                 title="📖 Explorar Diário"
                 onPress={() => {
-                  navigation.navigate('DiarioPersonagem', {
+                  navigation.navigate('Diario', {
                     personagem: personagemEditando,
                   });
                   setModalVisivel(false);
