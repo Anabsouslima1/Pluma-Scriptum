@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import { Entypo } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BotaoCustomizado from '../components/BotaoCustomizado';
+import { Modal } from 'react-native';
 
 const STORAGE_KEY = '@reflexoes';
 
@@ -9,6 +19,9 @@ export default function Reflexao() {
   const [reflexoes, setReflexoes] = useState([]);
   const [novaReflexao, setNovaReflexao] = useState('');
   const [humor, setHumor] = useState('');
+
+  const [reflexaoParaExcluir, setReflexaoParaExcluir] = useState(null);
+  const [modalExcluirVisivel, setModalExcluirVisivel] = useState(false);
 
   const opcoesHumor = [
     { emoji: '😄', label: 'Feliz' },
@@ -26,14 +39,14 @@ export default function Reflexao() {
       'Transforme sua felicidade em palavras! Crie um diálogo divertido entre seus personagens favoritos!',
       'Sua inspiração está em alta! Que tal criar algo novo? Um capítulo ou uma história nova, você decide!',
       'Quando compartilhada, a alegria é multiplicada. Escreva uma cena onde a felicidade de alguém contamina todos ao redor.',
-      'Transforme pequenos detalhes felizes em narrativa: um cheiro, uma música ou um pôr do sol podem virar cena.'
+      'Transforme pequenos detalhes felizes em narrativa: um cheiro, uma música ou um pôr do sol podem virar cena.',
     ],
     '😔': [
       'Tudo bem não estar 100%. Escreva sobre o que sente, sem filtros.',
       'Mesmo a tristeza pode gerar belas histórias. Experimente escrever uma poesia curta.',
       'Lembre-se: até os dias nublados podem inspirar. Faça uma pausa, respire e tome um café.',
       'Use a tristeza como lente: descreva a cidade, a natureza ou o ambiente de um jeito que reflita seu sentimento.',
-      'Escreva um único parágrafo. Então, reflita: talvez seja possível criar algo da melancolia.'
+      'Escreva um único parágrafo. Então, reflita: talvez seja possível criar algo da melancolia.',
     ],
     '🤔': [
       'Escrever é um jeito de se conhecer melhor. Experimente!',
@@ -41,28 +54,28 @@ export default function Reflexao() {
       'Hoje pode ser um bom dia para refletir sobre as pontas soltas de suas histórias.',
       'Explore uma de suas dúvidas intrigantes e tranforme-a em parte da história.',
       'Escreva sobre uma escolha difícil que um personagem poderia enfrentar.',
-      'Pergunte-se: ‘O que aconteceria se…?’ e transforme isso em uma cena ou diálogo.'
+      'Pergunte-se: ‘O que aconteceria se…?’ e transforme isso em uma cena ou diálogo.',
     ],
     '😠': [
       'Canalize a raiva em algo produtivo: desenvolva um personagem intenso, como um vilão.',
       'A escrita pode ser terapêutica, uma forma de liberar o que te incomoda. Expresse o que está sentindo!',
       'Escreva uma cena de confronto ou tensão entre seus personagens.',
       'Explore a frustração como motivação para uma virada dramática na história.',
-      'Transforme a energia negativa em movimento, como uma cena cheia de ação.'
+      'Transforme a energia negativa em movimento, como uma cena cheia de ação.',
     ],
     '😴': [
       'Você fez bem até aqui! Dê uma pausa; o tempo ajuda a maturar suas ideias.',
       'As melhores ideias às vezes surgem de sonhos. Descanse bem!',
       'Revise algo simples, sem pressa; pequenos passos também contam.',
       'A energia baixa não significa bloqueio, apenas sinal de cuidar de si.',
-      'Ouça uma música suave e deixe sua mente se reconectar.'
+      'Ouça uma música suave e deixe sua mente se reconectar.',
     ],
     '😐': [
       'Aproveite para conectar ideias que estavam dispersas.',
       'Escreva sem pressa. O ritmo tranquilo também é inspiração.',
       'Talvez seja um bom momento para organizar pensamentos e criar estrutura.',
       'Cada palavra é um passo — o importante é começar.',
-      'Um estado neutro permite olhar para suas criações com objetividade.'
+      'Um estado neutro permite olhar para suas criações com objetividade.',
     ],
   };
 
@@ -94,7 +107,10 @@ export default function Reflexao() {
     if (!texto) return;
 
     const agora = new Date();
-    const dataHora = `${agora.toLocaleDateString()} ${agora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    const dataHora = `${agora.toLocaleDateString()} ${agora.toLocaleTimeString(
+      [],
+      { hour: '2-digit', minute: '2-digit' }
+    )}`;
 
     const opcaoSelecionada = opcoesHumor.find((o) => o.emoji === humor);
     const humorExibicao = opcaoSelecionada
@@ -130,6 +146,33 @@ export default function Reflexao() {
     Alert.alert('💡 Sugestão do Dia!', sugestao);
   };
 
+  const excluirReflexao = () => {
+    if (!reflexaoParaExcluir) return;
+    setReflexoes((prev) => prev.filter((r) => r !== reflexaoParaExcluir));
+    setReflexaoParaExcluir(null);
+    setModalExcluirVisivel(false);
+  };
+
+  <Modal
+    visible={modalExcluirVisivel}
+    transparent
+    animationType="fade"
+    onRequestClose={() => setModalExcluirVisivel(false)}>
+    <View style={styles.modalOverlay}>
+      <View style={styles.modalContainer}>
+        <Text style={styles.modalTitulo}>Deseja excluir esta reflexão?</Text>
+        <View style={styles.centered}>
+          <BotaoCustomizado
+            title="Confirmar Exclusão"
+            onPress={excluirReflexao}
+          />
+          <TouchableOpacity onPress={() => setModalExcluirVisivel(false)}>
+            <Text style={{ color: '#999', marginTop: 10 }}>Cancelar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  </Modal>;
   return (
     <View style={styles.container}>
       <Text style={styles.titulo}>Modo Reflexão</Text>
@@ -146,8 +189,7 @@ export default function Reflexao() {
               styles.emojiBotao,
               humor === opcao.emoji && styles.emojiSelecionado,
             ]}
-            onPress={() => setHumor(opcao.emoji)}
-          >
+            onPress={() => setHumor(opcao.emoji)}>
             <Text style={styles.emoji}>{opcao.emoji}</Text>
           </TouchableOpacity>
         ))}
@@ -162,12 +204,24 @@ export default function Reflexao() {
       />
 
       <View style={styles.centered}>
-        <BotaoCustomizado title="Registrar Reflexão" onPress={adicionarReflexao} />
+        <BotaoCustomizado
+          title="Registrar Reflexão"
+          onPress={adicionarReflexao}
+        />
       </View>
 
       <ScrollView style={styles.lista}>
         {reflexoes.map((r, i) => (
           <View key={i} style={styles.reflexaoContainer}>
+            <TouchableOpacity
+              onPress={() => {
+                setReflexaoParaExcluir(r);
+                setModalExcluirVisivel(true);
+              }}
+              style={styles.botaoLixeira}>
+              <Entypo name="trash" size={20} color="#4A148C" />
+            </TouchableOpacity>
+
             <Text style={styles.dataHora}>{r.dataHora}</Text>
             <Text style={styles.humor}>{r.humor}</Text>
             <Text style={styles.texto}>{r.texto}</Text>
@@ -255,4 +309,10 @@ const styles = StyleSheet.create({
   },
   iconeLampada: { fontSize: 20, marginRight: 8 },
   textoSugestao: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  botaoLixeira: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
+  },
 });
