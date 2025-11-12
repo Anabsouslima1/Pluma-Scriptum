@@ -40,6 +40,10 @@ export default function Home({ navigation }) {
         <BotaoCustomizado title="Construção de Mundo" onPress={() => navigation.navigate('ConstrucaoMundo')}/>
         <BotaoCustomizado title="Criação de Personagem" onPress={() => navigation.navigate('CriarPersonagem')} />
         <BotaoCustomizado title="Diários de Personagens" onPress={() => navigation.navigate('Diario')} />
+      
+      <Text 
+      style={styles.linkSobre}
+      onPress={() => navigation.navigate('Sobre')}>Sobre o Aplicativo</Text>
       </View>
 
     </SafeAreaView>
@@ -82,6 +86,13 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     marginTop: 30,
   },
+  linkSobre: {
+    marginTop: 10,
+    color: '#4A148C',
+    textDecorationLine: 'underline',
+    fontWeight: '600',
+    fontSize: 16,
+  }
 });
 
 
