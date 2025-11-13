@@ -133,7 +133,7 @@ Abra o aplicativo Expo Go no celular, escaneie o código QR gerado no terminal d
 ---
 
 ## Autoria
-Desenvolvido com 💛 por **Ana Lima** (R.A: 22.124.085-6)
+Desenvolvido com 💛 por **Ana Lima**
 
 ## Professor Responsável: Isaac Jesus Silva
 
